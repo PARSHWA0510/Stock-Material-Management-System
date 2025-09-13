@@ -704,6 +704,29 @@
 							]
 						}
 					}
+				},
+				{
+					"name": "Delete Purchase Bill (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/purchase-bills/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"purchase-bills",
+								":id"
+							]
+						}
+					}
 				}
 			]
 		},

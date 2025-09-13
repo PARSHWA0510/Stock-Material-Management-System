@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const PurchaseBills: React.FC = () => {
   const [purchaseBills, setPurchaseBills] = useState<PurchaseBill[]>([]);
+  const [filteredPurchaseBills, setFilteredPurchaseBills] = useState<PurchaseBill[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
@@ -18,6 +19,8 @@ const PurchaseBills: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState<PurchaseBill | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [formData, setFormData] = useState<PurchaseBillFormData>({
     companyId: '',
     invoiceNumber: '',
@@ -47,6 +50,7 @@ const PurchaseBills: React.FC = () => {
       ]);
 
       setPurchaseBills(purchaseBillsData);
+      setFilteredPurchaseBills(purchaseBillsData);
       setMaterials(materialsData);
       setCompanies(companiesData);
       setSites(sitesData);
@@ -57,6 +61,44 @@ const PurchaseBills: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Filter purchase bills by year and month
+  useEffect(() => {
+    let filtered = purchaseBills;
+
+    if (selectedYear) {
+      filtered = filtered.filter(bill => {
+        const billYear = new Date(bill.billDate).getFullYear().toString();
+        return billYear === selectedYear;
+      });
+    }
+
+    if (selectedMonth) {
+      filtered = filtered.filter(bill => {
+        const billMonth = (new Date(bill.billDate).getMonth() + 1).toString().padStart(2, '0');
+        return billMonth === selectedMonth;
+      });
+    }
+
+    setFilteredPurchaseBills(filtered);
+  }, [purchaseBills, selectedYear, selectedMonth]);
+
+  // Get unique years from purchase bills
+  const getAvailableYears = () => {
+    const years = [...new Set(purchaseBills.map(bill => new Date(bill.billDate).getFullYear()))];
+    return years.sort((a, b) => b - a); // Sort descending (newest first)
+  };
+
+  // Get unique months from purchase bills for selected year
+  const getAvailableMonths = () => {
+    if (!selectedYear) return [];
+    const months = [...new Set(
+      purchaseBills
+        .filter(bill => new Date(bill.billDate).getFullYear().toString() === selectedYear)
+        .map(bill => new Date(bill.billDate).getMonth() + 1)
+    )];
+    return months.sort((a, b) => b - a); // Sort descending (newest first)
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,6 +271,70 @@ const PurchaseBills: React.FC = () => {
         <div className="card-header">
           <h3 className="card-title">Purchase Bills List</h3>
         </div>
+        <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0' }}>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Filter by Year:</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  setSelectedMonth(''); // Reset month when year changes
+                }}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  minWidth: '120px'
+                }}
+              >
+                <option value="">All Years</option>
+                {getAvailableYears().map(year => (
+                  <option key={year} value={year.toString()}>{year}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Filter by Month:</label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                disabled={!selectedYear}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  minWidth: '120px',
+                  opacity: selectedYear ? 1 : 0.6
+                }}
+              >
+                <option value="">All Months</option>
+                {getAvailableMonths().map(month => (
+                  <option key={month} value={month.toString().padStart(2, '0')}>
+                    {new Date(2024, month - 1).toLocaleDateString('en-US', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ color: '#666', fontSize: '14px' }}>
+                Showing {filteredPurchaseBills.length} of {purchaseBills.length} bills
+              </span>
+              {(selectedYear || selectedMonth) && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setSelectedYear('');
+                    setSelectedMonth('');
+                  }}
+                  style={{ padding: '6px 12px', fontSize: '14px' }}
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
         <table className="table">
           <thead>
             <tr>
@@ -242,7 +348,7 @@ const PurchaseBills: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {purchaseBills.map((bill) => (
+            {filteredPurchaseBills.map((bill) => (
               <tr key={bill.id}>
                 <td>{bill.invoiceNumber}</td>
                 <td>{bill.company.name}</td>

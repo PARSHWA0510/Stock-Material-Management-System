@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const MaterialIssues: React.FC = () => {
   const [materialIssues, setMaterialIssues] = useState<MaterialIssue[]>([]);
+  const [filteredMaterialIssues, setFilteredMaterialIssues] = useState<MaterialIssue[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
   const [godowns, setGodowns] = useState<Godown[]>([]);
@@ -19,6 +20,8 @@ const MaterialIssues: React.FC = () => {
   const [selectedIssue, setSelectedIssue] = useState<MaterialIssue | null>(null);
   const [stockData, setStockData] = useState<{[key: string]: number}>({});
   const [materialRates, setMaterialRates] = useState<{[key: string]: number}>({});
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [formData, setFormData] = useState<MaterialIssueFormData>({
     siteId: '',
     fromGodownId: '',
@@ -44,6 +47,7 @@ const MaterialIssues: React.FC = () => {
       ]);
 
       setMaterialIssues(issuesData);
+      setFilteredMaterialIssues(issuesData);
       setMaterials(materialsData);
       setSites(sitesData);
       setGodowns(godownsData);
@@ -52,6 +56,44 @@ const MaterialIssues: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Filter material issues by year and month
+  useEffect(() => {
+    let filtered = materialIssues;
+
+    if (selectedYear) {
+      filtered = filtered.filter(issue => {
+        const issueYear = new Date(issue.issueDate).getFullYear().toString();
+        return issueYear === selectedYear;
+      });
+    }
+
+    if (selectedMonth) {
+      filtered = filtered.filter(issue => {
+        const issueMonth = (new Date(issue.issueDate).getMonth() + 1).toString().padStart(2, '0');
+        return issueMonth === selectedMonth;
+      });
+    }
+
+    setFilteredMaterialIssues(filtered);
+  }, [materialIssues, selectedYear, selectedMonth]);
+
+  // Get unique years from material issues
+  const getAvailableYears = () => {
+    const years = [...new Set(materialIssues.map(issue => new Date(issue.issueDate).getFullYear()))];
+    return years.sort((a, b) => b - a); // Sort descending (newest first)
+  };
+
+  // Get unique months from material issues for selected year
+  const getAvailableMonths = () => {
+    if (!selectedYear) return [];
+    const months = [...new Set(
+      materialIssues
+        .filter(issue => new Date(issue.issueDate).getFullYear().toString() === selectedYear)
+        .map(issue => new Date(issue.issueDate).getMonth() + 1)
+    )];
+    return months.sort((a, b) => b - a); // Sort descending (newest first)
   };
 
   const fetchStockData = async (godownId?: string) => {
@@ -321,6 +363,70 @@ const MaterialIssues: React.FC = () => {
         <div className="card-header">
           <h3 className="card-title">Material Issues List</h3>
         </div>
+        <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0' }}>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Filter by Year:</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  setSelectedMonth(''); // Reset month when year changes
+                }}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  minWidth: '120px'
+                }}
+              >
+                <option value="">All Years</option>
+                {getAvailableYears().map(year => (
+                  <option key={year} value={year.toString()}>{year}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Filter by Month:</label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                disabled={!selectedYear}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  minWidth: '120px',
+                  opacity: selectedYear ? 1 : 0.6
+                }}
+              >
+                <option value="">All Months</option>
+                {getAvailableMonths().map(month => (
+                  <option key={month} value={month.toString().padStart(2, '0')}>
+                    {new Date(2024, month - 1).toLocaleDateString('en-US', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ color: '#666', fontSize: '14px' }}>
+                Showing {filteredMaterialIssues.length} of {materialIssues.length} issues
+              </span>
+              {(selectedYear || selectedMonth) && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setSelectedYear('');
+                    setSelectedMonth('');
+                  }}
+                  style={{ padding: '6px 12px', fontSize: '14px' }}
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
         <table className="table">
           <thead>
             <tr>
@@ -334,7 +440,7 @@ const MaterialIssues: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {materialIssues.map((issue) => (
+            {filteredMaterialIssues.map((issue) => (
               <tr key={issue.id}>
                 <td>{issue.identifier}</td>
                 <td>{issue.site.name}</td>

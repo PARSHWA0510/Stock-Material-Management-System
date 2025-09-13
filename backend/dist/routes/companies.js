@@ -24,4 +24,3 @@ router.put('/:id', (0, auth_1.requireRole)(['ADMIN']), [
 // Delete company (Admin only)
 router.delete('/:id', (0, auth_1.requireRole)(['ADMIN']), companiesController_1.deleteCompany);
 exports.default = router;
-//# sourceMappingURL=companies.js.map

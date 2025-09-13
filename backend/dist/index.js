@@ -76,4 +76,3 @@ app.listen(PORT, () => {
     console.log(`📊 Health check: http://localhost:${PORT}/health`);
 });
 exports.default = app;
-//# sourceMappingURL=index.js.map

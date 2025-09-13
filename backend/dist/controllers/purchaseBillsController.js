@@ -209,4 +209,3 @@ const deletePurchaseBill = async (req, res) => {
     }
 };
 exports.deletePurchaseBill = deletePurchaseBill;
-//# sourceMappingURL=purchaseBillsController.js.map

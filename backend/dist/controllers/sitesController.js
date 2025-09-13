@@ -123,4 +123,3 @@ const deleteSite = async (req, res) => {
     }
 };
 exports.deleteSite = deleteSite;
-//# sourceMappingURL=sitesController.js.map

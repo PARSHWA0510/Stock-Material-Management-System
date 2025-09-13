@@ -111,4 +111,3 @@ const deleteCompany = async (req, res) => {
     }
 };
 exports.deleteCompany = deleteCompany;
-//# sourceMappingURL=companiesController.js.map

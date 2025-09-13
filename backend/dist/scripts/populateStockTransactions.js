@@ -178,4 +178,3 @@ async function populateStockTransactions() {
 }
 // Run the script
 populateStockTransactions();
-//# sourceMappingURL=populateStockTransactions.js.map

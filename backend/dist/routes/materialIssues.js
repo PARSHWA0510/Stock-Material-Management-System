@@ -28,4 +28,3 @@ router.post('/', [
 // Delete material issue (Admin only)
 router.delete('/:id', materialIssuesController_1.deleteMaterialIssue);
 exports.default = router;
-//# sourceMappingURL=materialIssues.js.map

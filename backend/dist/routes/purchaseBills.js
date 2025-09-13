@@ -32,4 +32,3 @@ router.post('/', [
 // Delete purchase bill (Admin only)
 router.delete('/:id', purchaseBillsController_1.deletePurchaseBill);
 exports.default = router;
-//# sourceMappingURL=purchaseBills.js.map

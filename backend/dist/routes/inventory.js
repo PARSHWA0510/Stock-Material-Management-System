@@ -11,4 +11,3 @@ router.get('/', inventoryController_1.getInventory);
 // Get stock transactions
 router.get('/transactions', inventoryController_1.getStockTransactions);
 exports.default = router;
-//# sourceMappingURL=inventory.js.map

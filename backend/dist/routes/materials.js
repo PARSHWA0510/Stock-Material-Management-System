@@ -26,4 +26,3 @@ router.put('/:id', (0, auth_1.requireRole)(['ADMIN']), [
 // Delete material (Admin only)
 router.delete('/:id', (0, auth_1.requireRole)(['ADMIN']), materialsController_1.deleteMaterial);
 exports.default = router;
-//# sourceMappingURL=materials.js.map

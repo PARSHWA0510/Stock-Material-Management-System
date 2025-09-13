@@ -22,4 +22,3 @@ router.put('/:id', (0, auth_1.requireRole)(['ADMIN']), [
 // Delete site (Admin only)
 router.delete('/:id', (0, auth_1.requireRole)(['ADMIN']), sitesController_1.deleteSite);
 exports.default = router;
-//# sourceMappingURL=sites.js.map

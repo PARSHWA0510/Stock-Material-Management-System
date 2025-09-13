@@ -92,4 +92,3 @@ const getStockTransactions = async (req, res) => {
     }
 };
 exports.getStockTransactions = getStockTransactions;
-//# sourceMappingURL=inventoryController.js.map

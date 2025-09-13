@@ -13,4 +13,3 @@ router.post('/login', [
 // Get current user profile
 router.get('/profile', auth_1.authenticateToken, authController_1.getProfile);
 exports.default = router;
-//# sourceMappingURL=auth.js.map

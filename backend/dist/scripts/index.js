@@ -69,4 +69,3 @@ function getDescription(scriptName) {
     };
     return descriptions[scriptName] || 'No description available';
 }
-//# sourceMappingURL=index.js.map

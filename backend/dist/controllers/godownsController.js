@@ -112,4 +112,3 @@ const deleteGodown = async (req, res) => {
     }
 };
 exports.deleteGodown = deleteGodown;
-//# sourceMappingURL=godownsController.js.map

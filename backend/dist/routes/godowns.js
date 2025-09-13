@@ -22,4 +22,3 @@ router.put('/:id', (0, auth_1.requireRole)(['ADMIN']), [
 // Delete godown (Admin only)
 router.delete('/:id', (0, auth_1.requireRole)(['ADMIN']), godownsController_1.deleteGodown);
 exports.default = router;
-//# sourceMappingURL=godowns.js.map

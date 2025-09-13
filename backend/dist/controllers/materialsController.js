@@ -116,4 +116,3 @@ const deleteMaterial = async (req, res) => {
     }
 };
 exports.deleteMaterial = deleteMaterial;
-//# sourceMappingURL=materialsController.js.map

@@ -346,4 +346,3 @@ const getSiteMaterialHistory = async (req, res) => {
     }
 };
 exports.getSiteMaterialHistory = getSiteMaterialHistory;
-//# sourceMappingURL=reportsController.js.map

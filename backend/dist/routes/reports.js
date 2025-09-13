@@ -12,4 +12,3 @@ router.get('/site-materials', auth_1.authenticateToken, reportsController_1.getS
 // Get detailed material history for a specific site and material
 router.get('/site-materials/:site_id/:material_id/history', auth_1.authenticateToken, reportsController_1.getSiteMaterialHistory);
 exports.default = router;
-//# sourceMappingURL=reports.js.map

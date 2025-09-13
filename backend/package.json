@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "echo 'Running Prisma migrations...' && npx prisma migrate deploy && echo 'Starting server...' && node dist/index.js",
     "dev": "nodemon src/index.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -30,9 +30,11 @@
   ],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": "20.15.0"
+  },
   "dependencies": {
     "@prisma/client": "5.19.1",
-    "@types/node": "^22.10.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -50,6 +52,7 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/morgan": "^1.9.10",
+    "@types/node": "^24.3.3",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2"
   }

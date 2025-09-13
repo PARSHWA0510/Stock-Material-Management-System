@@ -1,0 +1,1179 @@
+{
+	"info": {
+		"_postman_id": "stock-material-management-api",
+		"name": "Stock Material Management API",
+		"description": "Complete API collection for Stock Material Management System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    try {",
+									"        const responseJson = pm.response.json();",
+									"        ",
+									"        if (responseJson.token) {",
+									"            pm.environment.set(\"auth_token\", responseJson.token);",
+									"            console.log(\"Token saved successfully!\");",
+									"        } else {",
+									"            console.log(\"No token found in response\");",
+									"        }",
+									"        ",
+									"        if (responseJson.user && responseJson.user.id) {",
+									"            pm.environment.set(\"user_id\", responseJson.user.id);",
+									"            pm.environment.set(\"user_role\", responseJson.user.role || \"USER\");",
+									"        }",
+									"        ",
+									"    } catch (error) {",
+									"        console.log(\"Error parsing response:\", error);",
+									"    }",
+									"} else {",
+									"    console.log(\"Login failed with status:\", pm.response.code);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					}
+				},
+				{
+					"name": "API Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Materials",
+			"item": [
+				{
+					"name": "Get All Materials",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/materials",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"materials"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Material by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/materials/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"materials",
+								":id"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Material (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Material\",\n  \"unit\": \"Piece\",\n  \"hsnSac\": \"12345678\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/materials",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"materials"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Material (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Material\",\n  \"unit\": \"Box\",\n  \"hsnSac\": \"87654321\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/materials/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"materials",
+								":id"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Material (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/materials/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"materials",
+								":id"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Companies",
+			"item": [
+				{
+					"name": "Get All Companies",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/companies",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"companies"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Company (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Company\",\n  \"gstin\": \"29ABCDE1234F1Z5\",\n  \"address\": \"Test Address\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/companies",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"companies"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Company (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Company Name\",\n  \"gstin\": \"30UPDATED1234F1Z5\",\n  \"address\": \"Updated Address\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/companies/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"companies",
+								":id"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Company (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/companies/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"companies",
+								":id"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Sites",
+			"item": [
+				{
+					"name": "Get All Sites",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/sites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sites"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Site (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Site\",\n  \"address\": \"Test Site Address\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sites"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Site (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Site Name\",\n  \"address\": \"Updated Site Address\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sites/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sites",
+								":id"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Site (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/sites/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sites",
+								":id"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Godowns",
+			"item": [
+				{
+					"name": "Get All Godowns",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/godowns",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"godowns"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Godown (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Godown\",\n  \"address\": \"Test Godown Address\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/godowns",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"godowns"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Godown (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Godown Name\",\n  \"address\": \"Updated Godown Address\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/godowns/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"godowns",
+								":id"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Godown (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/godowns/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"godowns",
+								":id"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Purchase Bills",
+			"item": [
+				{
+					"name": "Get All Purchase Bills",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/purchase-bills",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"purchase-bills"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Purchase Bill by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/purchase-bills/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"purchase-bills",
+								":id"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Purchase Bill (Delivered to Godown)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyId\": \"COMPANY_ID_HERE\",\n  \"invoiceNumber\": \"INV-001\",\n  \"gstinNumber\": \"GST123\",\n  \"billDate\": \"2025-01-13T00:00:00.000Z\",\n  \"deliveredToType\": \"GODOWN\",\n  \"deliveredToId\": \"GODOWN_ID_HERE\",\n  \"items\": [\n    {\n      \"materialId\": \"MATERIAL_ID_HERE\",\n      \"quantity\": 50,\n      \"unit\": \"bag\",\n      \"rate\": 400,\n      \"gstPercent\": 18,\n      \"totalExclGst\": 20000,\n      \"totalInclGst\": 23600,\n      \"locationInGodown\": \"A-1\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/purchase-bills",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"purchase-bills"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Purchase Bill (Direct to Site)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyId\": \"COMPANY_ID_HERE\",\n  \"invoiceNumber\": \"INV-002\",\n  \"gstinNumber\": \"GST456\",\n  \"billDate\": \"2025-01-13T00:00:00.000Z\",\n  \"deliveredToType\": \"SITE\",\n  \"deliveredToId\": \"SITE_ID_HERE\",\n  \"items\": [\n    {\n      \"materialId\": \"MATERIAL_ID_HERE\",\n      \"quantity\": 25,\n      \"unit\": \"bag\",\n      \"rate\": 400,\n      \"gstPercent\": 18,\n      \"totalExclGst\": 10000,\n      \"totalInclGst\": 11800\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/purchase-bills",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"purchase-bills"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Material Issues",
+			"item": [
+				{
+					"name": "Get All Material Issues",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/material-issues",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"material-issues"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Material Issue by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/material-issues/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"material-issues",
+								":id"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Material Issue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"siteId\": \"SITE_ID_HERE\",\n  \"fromGodownId\": \"GODOWN_ID_HERE\",\n  \"issueDate\": \"2025-01-13T00:00:00.000Z\",\n  \"items\": [\n    {\n      \"materialId\": \"MATERIAL_ID_HERE\",\n      \"quantity\": 10,\n      \"unit\": \"bag\",\n      \"rate\": 400,\n      \"totalExclGst\": 4000,\n      \"gstPercent\": 18,\n      \"totalInclGst\": 4720\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/material-issues",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"material-issues"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Material Issue (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/material-issues/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"material-issues",
+								":id"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Inventory",
+			"item": [
+				{
+					"name": "Get Inventory Levels",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/inventory",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"inventory"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Inventory by Godown",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/inventory?godownId=GODOWN_ID_HERE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"inventory"
+							],
+							"query": [
+								{
+									"key": "godownId",
+									"value": "GODOWN_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Stock Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/transactions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"inventory",
+								"transactions"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Get Site Material Reports (All Sites)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/reports/site-materials",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"site-materials"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Site Materials (Specific Site)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/reports/site-materials?site_id=SITE_ID_HERE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"site-materials"
+							],
+							"query": [
+								{
+									"key": "site_id",
+									"value": "SITE_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Godown Availability",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/reports/godown-availability?godownId=GODOWN_ID_HERE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"godown-availability"
+							],
+							"query": [
+								{
+									"key": "godownId",
+									"value": "GODOWN_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Material History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/reports/material-history?materialId=MATERIAL_ID_HERE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"material-history"
+							],
+							"query": [
+								{
+									"key": "materialId",
+									"value": "MATERIAL_ID_HERE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Site Material History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/reports/site-materials/SITE_ID_HERE/MATERIAL_ID_HERE/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"site-materials",
+								"SITE_ID_HERE",
+								"MATERIAL_ID_HERE",
+								"history"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Test Different User Roles",
+			"item": [
+				{
+					"name": "Login as Storekeeper",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"storekeeper@example.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    try {",
+									"        const responseJson = pm.response.json();",
+									"        ",
+									"        if (responseJson.token) {",
+									"            pm.environment.set(\"auth_token\", responseJson.token);",
+									"            console.log(\"Storekeeper token saved successfully!\");",
+									"        }",
+									"        ",
+									"        if (responseJson.user && responseJson.user.id) {",
+									"            pm.environment.set(\"user_id\", responseJson.user.id);",
+									"            pm.environment.set(\"user_role\", responseJson.user.role || \"USER\");",
+									"        }",
+									"        ",
+									"    } catch (error) {",
+									"        console.log(\"Error parsing response:\", error);",
+									"    }",
+									"} else {",
+									"    console.log(\"Storekeeper login failed with status:\", pm.response.code);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test Storekeeper Access (Should Work)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/materials",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"materials"
+							]
+						}
+					}
+				},
+				{
+					"name": "Test Storekeeper Create Material (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Unauthorized Material\",\n  \"unit\": \"Piece\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/materials",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"materials"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -1,0 +1,203 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(STOREKEEPER)
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchaseBills    PurchaseBill[]
+  materialIssues   MaterialIssue[]
+
+  @@map("users")
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  gstin     String?  @unique
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchaseBills PurchaseBill[]
+
+  @@map("companies")
+}
+
+model Material {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  unit      String
+  hsnSac    String?  @map("hsn_sac")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchaseBillItems PurchaseBillItem[]
+  materialIssueItems MaterialIssueItem[]
+  stockTransactions  StockTransaction[]
+
+  @@map("materials")
+}
+
+model Site {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  materialIssues   MaterialIssue[]
+  stockTransactions StockTransaction[]
+
+  @@map("sites")
+}
+
+model Godown {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  materialIssues    MaterialIssue[]
+  stockTransactions StockTransaction[]
+
+  @@map("godowns")
+}
+
+model PurchaseBill {
+  id               String            @id @default(uuid())
+  companyId        String            @map("company_id")
+  invoiceNumber    String            @map("invoice_number")
+  gstinNumber      String?           @map("gstin_number")
+  billDate         DateTime          @map("bill_date")
+  deliveredToType  DeliveryType      @map("delivered_to_type")
+  deliveredToId    String            @map("delivered_to_id")
+  createdById      String            @map("created_by")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  company  Company            @relation(fields: [companyId], references: [id])
+  createdBy User              @relation(fields: [createdById], references: [id])
+  items    PurchaseBillItem[]
+
+  @@map("purchase_bills")
+}
+
+model PurchaseBillItem {
+  id             String  @id @default(uuid())
+  purchaseBillId String  @map("purchase_bill_id")
+  materialId     String  @map("material_id")
+  quantity       Decimal
+  unit           String
+  rate           Decimal
+  gstPercent     Decimal @map("gst_percent")
+  totalExclGst   Decimal @map("total_excl_gst")
+  totalInclGst   Decimal @map("total_incl_gst")
+  locationInGodown String? @map("location_in_godown")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchaseBill PurchaseBill @relation(fields: [purchaseBillId], references: [id], onDelete: Cascade)
+  material     Material     @relation(fields: [materialId], references: [id])
+
+  @@map("purchase_bill_items")
+}
+
+model MaterialIssue {
+  id            String   @id @default(uuid())
+  identifier    String   @unique // Sequence number
+  issueDate     DateTime @map("issue_date")
+  siteId        String   @map("site_id")
+  fromGodownId  String?  @map("from_godown_id")
+  createdById   String   @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  site      Site                @relation(fields: [siteId], references: [id])
+  fromGodown Godown?            @relation(fields: [fromGodownId], references: [id])
+  createdBy  User               @relation(fields: [createdById], references: [id])
+  items      MaterialIssueItem[]
+
+  @@map("material_issues")
+}
+
+model MaterialIssueItem {
+  id              String  @id @default(uuid())
+  materialIssueId String  @map("material_issue_id")
+  materialId      String  @map("material_id")
+  quantity        Decimal
+  unit            String
+  rate            Decimal
+  totalExclGst    Decimal @map("total_excl_gst")
+  gstPercent      Decimal @map("gst_percent")
+  totalInclGst    Decimal @map("total_incl_gst")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  materialIssue MaterialIssue @relation(fields: [materialIssueId], references: [id], onDelete: Cascade)
+  material      Material      @relation(fields: [materialId], references: [id])
+
+  @@map("material_issue_items")
+}
+
+model StockTransaction {
+  id            String      @id @default(uuid())
+  materialId    String      @map("material_id")
+  godownId      String?     @map("godown_id")
+  siteId        String?     @map("site_id")
+  txType        TransactionType @map("tx_type")
+  referenceTable String     @map("reference_table")
+  referenceId   String      @map("reference_id")
+  quantity      Decimal
+  rate          Decimal
+  balanceAfter  Decimal     @map("balance_after")
+  txDate        DateTime    @map("tx_date")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  material Material @relation(fields: [materialId], references: [id])
+  godown   Godown?  @relation(fields: [godownId], references: [id])
+  site     Site?    @relation(fields: [siteId], references: [id])
+
+  @@map("stock_transactions")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  STOREKEEPER
+}
+
+enum DeliveryType {
+  GODOWN
+  SITE
+}
+
+enum TransactionType {
+  IN
+  OUT
+}

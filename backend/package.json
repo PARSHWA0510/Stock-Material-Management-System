@@ -1,0 +1,53 @@
+{
+  "name": "stock-management-backend",
+  "version": "1.0.0",
+  "description": "Backend for Stock Material Management System",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "nodemon src/index.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "ts-node src/seed.ts",
+    "db:populate-stock": "ts-node src/scripts/populateStockTransactions.ts",
+    "db:add-test-data": "ts-node src/scripts/addMoreTestData.ts",
+    "test:stock-data": "ts-node src/scripts/testStockData.ts",
+    "test:stock-calculation": "ts-node src/scripts/testStockCalculation.ts",
+    "test:all-stock": "ts-node src/scripts/testAllStock.ts",
+    "test:reports": "ts-node src/scripts/testReports.ts",
+    "scripts": "ts-node src/scripts/index.ts"
+  },
+  "keywords": [
+    "stock",
+    "material",
+    "management",
+    "inventory"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "5.19.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-validator": "^7.2.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^22.10.2",
+    "nodemon": "^3.1.9",
+    "prisma": "5.19.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

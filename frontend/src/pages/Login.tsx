@@ -88,11 +88,6 @@ const Login: React.FC = () => {
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        <div className="test-credentials">
-          <p><strong>Test Credentials:</strong></p>
-          <p>Admin: admin@example.com / admin123</p>
-          <p>Storekeeper: storekeeper@example.com / admin123</p>
-        </div>
       </div>
     </div>
   );

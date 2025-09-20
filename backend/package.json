@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "echo 'Running Prisma migrations...' && npx prisma migrate deploy && echo 'Starting server...' && node dist/index.js",
+    "start": "npm run build && echo 'Running Prisma migrations...' && npx prisma migrate deploy && echo 'Starting server...' && node dist/index.js",
+    "postinstall": "prisma generate",
     "dev": "nodemon src/index.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -19,8 +20,7 @@
     "test:stock-calculation": "ts-node src/scripts/testStockCalculation.ts",
     "test:all-stock": "ts-node src/scripts/testAllStock.ts",
     "test:reports": "ts-node src/scripts/testReports.ts",
-    "scripts": "ts-node src/scripts/index.ts",
-    "postinstall": "prisma generate"
+    "scripts": "ts-node src/scripts/index.ts"
   },
   "keywords": [
     "stock",

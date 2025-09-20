@@ -7,20 +7,36 @@ async function main() {
   console.log('🌱 Starting production seed...');
 
   // Create admin user
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const adminHashedPassword = await bcrypt.hash('admin15101970', 10);
   
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
+    where: { email: 'admin-user@gmail.com' },
     update: {},
     create: {
-      email: 'admin@example.com',
-      password: hashedPassword,
+      email: 'admin-user@gmail.com',
+      password: adminHashedPassword,
       name: 'Admin User',
       role: 'ADMIN'
     }
   });
 
   console.log('✅ Admin user created:', adminUser.email);
+
+  // Create storekeeper user
+  const storekeeperHashedPassword = await bcrypt.hash('storekeeper123', 10);
+  
+  const storekeeperUser = await prisma.user.upsert({
+    where: { email: 'store-keeper@gmail.com' },
+    update: {},
+    create: {
+      email: 'store-keeper@gmail.com',
+      password: storekeeperHashedPassword,
+      name: 'Store Keeper',
+      role: 'STOREKEEPER'
+    }
+  });
+
+  console.log('✅ Storekeeper user created:', storekeeperUser.email);
 
   // Create materials
   const materials = [
@@ -93,8 +109,10 @@ async function main() {
   console.log('✅ Godowns created');
 
   console.log('🎉 Production seed completed successfully!');
-  console.log('📧 Admin Login: admin@example.com');
-  console.log('🔑 Admin Password: admin123');
+  console.log('📧 Admin Login: admin-user@gmail.com');
+  console.log('🔑 Admin Password: admin15101970');
+  console.log('📧 Storekeeper Login: store-keeper@gmail.com');
+  console.log('🔑 Storekeeper Password: storekeeper123');
 }
 
 main()

@@ -250,9 +250,11 @@ const Materials: React.FC = () => {
       <div className="header">
         <h1>Materials Master</h1>
         {isAdmin && (
-          <button className="btn btn-primary" onClick={handleAddNew}>
-            Add Material
-          </button>
+          <div>
+            <button className="btn btn-primary" onClick={handleAddNew}>
+              Add Material
+            </button>
+          </div>
         )}
       </div>
 
@@ -272,7 +274,8 @@ const Materials: React.FC = () => {
         <div className="card-header">
           <h3 className="card-title">Materials List</h3>
         </div>
-        <table className="table">
+        <div className="table-wrapper">
+          <table className="table">
           <thead>
             <tr>
               <th>Name</th>
@@ -310,6 +313,7 @@ const Materials: React.FC = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modal */}

@@ -88,7 +88,8 @@ const Inventory: React.FC = () => {
     <div>
       <div className="header">
         <h1>Inventory</h1>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             className="btn btn-primary"
             onClick={() => setShowPDFModal(true)}
@@ -113,6 +114,7 @@ const Inventory: React.FC = () => {
           >
             Refresh
           </button>
+          </div>
         </div>
       </div>
 

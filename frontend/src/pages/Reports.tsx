@@ -147,9 +147,10 @@ const Reports: React.FC = () => {
 
   return (
     <div>
-      <div className="header">
-        <h1>Reports</h1>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div className="header">
+          <h1>Reports</h1>
+          <div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button 
             className="btn btn-primary"
             onClick={handleDownloadPDF}
@@ -169,8 +170,9 @@ const Reports: React.FC = () => {
           >
             Refresh
           </button>
+            </div>
+          </div>
         </div>
-      </div>
 
       {/* Tabs */}
       <div style={{ marginBottom: '20px', borderBottom: '2px solid #ddd' }}>

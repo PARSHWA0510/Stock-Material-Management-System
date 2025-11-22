@@ -347,9 +347,11 @@ const MaterialIssues: React.FC = () => {
     <div>
       <div className="header">
         <h1>Material Issues</h1>
-        <button className="btn btn-primary" onClick={handleModalOpen}>
-          Issue Material
-        </button>
+        <div>
+          <button className="btn btn-primary" onClick={handleModalOpen}>
+            Issue Material
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -432,7 +434,8 @@ const MaterialIssues: React.FC = () => {
             </div>
           </div>
         </div>
-        <table className="table">
+        <div className="table-wrapper">
+          <table className="table">
           <thead>
             <tr>
               <th>Issue ID</th>
@@ -474,6 +477,7 @@ const MaterialIssues: React.FC = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create Modal */}

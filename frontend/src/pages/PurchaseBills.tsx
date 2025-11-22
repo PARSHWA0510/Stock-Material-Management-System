@@ -268,12 +268,14 @@ const PurchaseBills: React.FC = () => {
     <div>
       <div className="header">
         <h1>Purchase Bills</h1>
-        <button className="btn btn-primary" onClick={() => {
-          setError(''); // Clear any previous errors
-          setShowModal(true);
-        }}>
-          Add Purchase Bill
-        </button>
+        <div>
+          <button className="btn btn-primary" onClick={() => {
+            setError(''); // Clear any previous errors
+            setShowModal(true);
+          }}>
+            Add Purchase Bill
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -356,7 +358,8 @@ const PurchaseBills: React.FC = () => {
             </div>
           </div>
         </div>
-        <table className="table">
+        <div className="table-wrapper">
+          <table className="table">
           <thead>
             <tr>
               <th>Invoice No.</th>
@@ -398,6 +401,7 @@ const PurchaseBills: React.FC = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modal */}

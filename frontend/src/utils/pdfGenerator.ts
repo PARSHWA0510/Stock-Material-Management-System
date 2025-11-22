@@ -2,13 +2,15 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 // Helper function to format currency
+// Using plain number format to avoid jsPDF rendering issues with currency symbols
 const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
+  // Format number with commas and 2 decimal places
+  // Using 'Rs.' prefix instead of ₹ symbol for better jsPDF compatibility
+  const formatted = new Intl.NumberFormat('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(amount);
+  return `Rs. ${formatted}`;
 };
 
 // Helper function to format date

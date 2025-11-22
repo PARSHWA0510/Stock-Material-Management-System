@@ -96,9 +96,11 @@ const Sites: React.FC = () => {
       <div className="header">
         <h1>Sites</h1>
         {isAdmin && (
-          <button className="btn btn-primary" onClick={handleAddNew}>
-            Add Site
-          </button>
+          <div>
+            <button className="btn btn-primary" onClick={handleAddNew}>
+              Add Site
+            </button>
+          </div>
         )}
       </div>
 
@@ -118,7 +120,8 @@ const Sites: React.FC = () => {
         <div className="card-header">
           <h3 className="card-title">Sites List</h3>
         </div>
-        <table className="table">
+        <div className="table-wrapper">
+          <table className="table">
           <thead>
             <tr>
               <th>Name</th>
@@ -154,6 +157,7 @@ const Sites: React.FC = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modal */}

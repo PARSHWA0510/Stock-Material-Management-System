@@ -1,0 +1,8 @@
+# terraform.tfvars
+aws_region   = "us-east-1"
+project_name = "stock-management"
+environment  = "prod"
+
+# Generate these secrets securely
+db_password = "your-secure-database-password-here"
+jwt_secret  = "your-super-secret-jwt-key-here"

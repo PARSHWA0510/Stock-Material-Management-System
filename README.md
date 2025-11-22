@@ -20,9 +20,13 @@ A comprehensive stock/inventory management system built with React, Node.js, and
 
 ## 📋 Prerequisites
 
-- Node.js (v18.16.0 or higher)
+- Node.js (v20.15.0 or higher)
 - PostgreSQL (v12 or higher)
 - npm or yarn
+
+> **📖 Windows Users:** See [WINDOWS_SETUP.md](./WINDOWS_SETUP.md) for detailed Windows installation instructions.
+> 
+> **🚀 Quick Setup:** Run `setup-windows.ps1` as Administrator for automated installation using Chocolatey!
 
 ## 🚀 Quick Start
 
@@ -193,3 +197,10 @@ For detailed documentation, see `backend/src/scripts/README.md`.
 ## 📄 License
 
 This project is licensed under the ISC License.
+
+## 📚 Additional Documentation
+
+- [Windows Setup Guide](./WINDOWS_SETUP.md) - Complete setup instructions for Windows
+- [GitHub Upload Guide](./GITHUB_UPLOAD.md) - How to upload project to GitHub securely
+- [AWS Deployment Guide](./backend/aws-deploy/README.md) - Deploy to AWS Lambda + Aurora
+- [Frontend AWS Integration](./frontend/AWS_DEPLOYMENT.md) - Connect frontend to AWS backend

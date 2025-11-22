@@ -84,9 +84,12 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-});
+// Only start server if not running in Lambda
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME === '') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  });
+}
 
 export default app;

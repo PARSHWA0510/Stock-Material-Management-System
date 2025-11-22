@@ -32,3 +32,16 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# AWS/Terraform sensitive files
+**/terraform.tfvars
+**/*.tfvars
+!**/*.tfvars.example
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# AWS deployment artifacts
+**/lambda.zip
+**/dist/lambda.zip

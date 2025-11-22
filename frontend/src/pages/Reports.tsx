@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { reportsService } from '../services/reportsService';
+import PDFOptionsModal from '../components/PDFOptionsModal';
 import type { 
   SiteMaterialReportsResponse, 
   SiteMaterialReport, 
@@ -11,12 +12,18 @@ const Reports: React.FC = () => {
   const [reports, setReports] = useState<SiteMaterialReportsResponse | null>(null);
   const [selectedSite, setSelectedSite] = useState<SiteMaterialReport | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<SiteMaterialHistory | null>(null);
+  const [materialWiseReports, setMaterialWiseReports] = useState<any>(null);
+  const [selectedMaterialReport, setSelectedMaterialReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMaterialWise, setLoadingMaterialWise] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showMaterialHistory, setShowMaterialHistory] = useState(false);
+  const [activeTab, setActiveTab] = useState<'site' | 'material'>('site');
+  const [showPDFModal, setShowPDFModal] = useState(false);
 
   useEffect(() => {
     fetchReports();
+    fetchMaterialWiseReports();
   }, []);
 
   const fetchReports = async () => {
@@ -51,6 +58,32 @@ const Reports: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchMaterialWiseReports = async (materialId?: string) => {
+    try {
+      setLoadingMaterialWise(true);
+      setError(null);
+      const data = await reportsService.getMaterialWiseReports(materialId);
+      if (materialId) {
+        setSelectedMaterialReport(data);
+      } else {
+        setMaterialWiseReports(data);
+      }
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || 'Failed to fetch material-wise reports');
+    } finally {
+      setLoadingMaterialWise(false);
+    }
+  };
+
+  const handleMaterialWiseSelect = async (materialId: string) => {
+    await fetchMaterialWiseReports(materialId);
+  };
+
+  const handleDownloadPDF = () => {
+    setShowPDFModal(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -115,42 +148,89 @@ const Reports: React.FC = () => {
   return (
     <div>
       <div className="header">
-        <h1>Site Material Reports</h1>
+        <h1>Reports</h1>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <button 
+            className="btn btn-primary"
+            onClick={handleDownloadPDF}
+            disabled={
+              (activeTab === 'site' && !reports) ||
+              (activeTab === 'material' && !materialWiseReports && !selectedMaterialReport)
+            }
+          >
+            Download PDF
+          </button>
+          <button 
             className="btn btn-secondary"
-            onClick={fetchReports}
+            onClick={() => {
+              if (activeTab === 'site') fetchReports();
+              else fetchMaterialWiseReports();
+            }}
           >
             Refresh
           </button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      {reports && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-          <div className="card" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2c3e50' }}>
-              {reports.summary.totalSites}
-            </div>
-            <div style={{ color: '#7f8c8d' }}>Total Sites</div>
-          </div>
-          <div className="card" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#27ae60' }}>
-              {reports.summary.totalMaterials}
-            </div>
-            <div style={{ color: '#7f8c8d' }}>Total Materials</div>
-          </div>
-          <div className="card" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3498db' }}>
-              {formatCurrency(reports.summary.overallTotal)}
-            </div>
-            <div style={{ color: '#7f8c8d' }}>Total Value</div>
-          </div>
-        </div>
-      )}
+      {/* Tabs */}
+      <div style={{ marginBottom: '20px', borderBottom: '2px solid #ddd' }}>
+        <button
+          onClick={() => setActiveTab('site')}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: activeTab === 'site' ? '#3498db' : 'transparent',
+            color: activeTab === 'site' ? 'white' : '#333',
+            border: 'none',
+            borderBottom: activeTab === 'site' ? '3px solid #2980b9' : 'none',
+            cursor: 'pointer',
+            marginRight: '10px'
+          }}
+        >
+          Site-Wise Reports
+        </button>
+        <button
+          onClick={() => setActiveTab('material')}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: activeTab === 'material' ? '#3498db' : 'transparent',
+            color: activeTab === 'material' ? 'white' : '#333',
+            border: 'none',
+            borderBottom: activeTab === 'material' ? '3px solid #2980b9' : 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Material-Wise Reports
+        </button>
+      </div>
 
-      {/* Sites Overview */}
+      {/* Site-Wise Reports */}
+      {activeTab === 'site' && (
+        <>
+          {/* Summary Cards */}
+          {reports && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+              <div className="card" style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2c3e50' }}>
+                  {reports.summary.totalSites}
+                </div>
+                <div style={{ color: '#7f8c8d' }}>Total Sites</div>
+              </div>
+              <div className="card" style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#27ae60' }}>
+                  {reports.summary.totalMaterials}
+                </div>
+                <div style={{ color: '#7f8c8d' }}>Total Materials</div>
+              </div>
+              <div className="card" style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3498db' }}>
+                  {formatCurrency(reports.summary.overallTotal)}
+                </div>
+                <div style={{ color: '#7f8c8d' }}>Total Value</div>
+              </div>
+            </div>
+          )}
+
+          {/* Sites Overview */}
       <div className="card" style={{ marginBottom: '30px' }}>
         <div className="card-header">
           <h3 className="card-title">Sites Overview</h3>
@@ -274,12 +354,26 @@ const Reports: React.FC = () => {
             borderRadius: '8px',
             maxWidth: '800px',
             width: '100%',
-            maxHeight: '80vh',
-            overflow: 'hidden',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+            overflow: 'hidden'
           }}>
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 className="card-title">
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '20px 24px',
+              borderBottom: '1px solid #e0e0e0',
+              backgroundColor: '#f8f9fa'
+            }}>
+              <h3 style={{
+                margin: 0,
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: '#2c3e50'
+              }}>
                 {selectedMaterial.material.name} - {selectedMaterial.site.name}
               </h3>
               <button
@@ -287,23 +381,43 @@ const Reports: React.FC = () => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  fontSize: '20px',
+                  fontSize: '28px',
                   cursor: 'pointer',
-                  color: '#7f8c8d'
+                  color: '#666',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '36px',
+                  height: '36px',
+                  lineHeight: '1',
+                  transition: 'all 0.2s ease',
+                  fontWeight: 'bold'
                 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#e0e0e0';
+                  e.currentTarget.style.color = '#333';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#666';
+                }}
+                aria-label="Close"
               >
-                ✕
+                ×
               </button>
             </div>
-            <div style={{ padding: '20px', maxHeight: '60vh', overflowY: 'auto' }}>
+            <div style={{ padding: '24px', maxHeight: 'calc(90vh - 100px)', overflowY: 'auto' }}>
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: '1fr 1fr', 
                 gap: '20px', 
-                marginBottom: '20px',
-                padding: '15px',
+                marginBottom: '24px',
+                padding: '20px',
                 backgroundColor: '#f8f9fa',
-                borderRadius: '8px'
+                borderRadius: '8px',
+                border: '1px solid #e0e0e0'
               }}>
                 <div>
                   <div style={{ color: '#7f8c8d', fontSize: '14px' }}>Total Quantity</div>
@@ -319,13 +433,14 @@ const Reports: React.FC = () => {
                 </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {selectedMaterial.history.map((item, index) => (
                   <div key={index} style={{
-                    border: '1px solid #ddd',
+                    border: '1px solid #e0e0e0',
                     borderRadius: '8px',
-                    padding: '15px',
-                    backgroundColor: '#f8f9fa'
+                    padding: '16px 20px',
+                    backgroundColor: '#ffffff',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
@@ -366,6 +481,141 @@ const Reports: React.FC = () => {
           </div>
         </div>
       )}
+      </>)}
+
+      {/* Material-Wise Reports */}
+      {activeTab === 'material' && (
+        <>
+          {loadingMaterialWise ? (
+            <div style={{ textAlign: 'center', padding: '40px' }}>Loading material-wise reports...</div>
+          ) : selectedMaterialReport ? (
+            <div className="card">
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="card-title">Material: {selectedMaterialReport.material.name}</h3>
+                <button className="btn btn-secondary" onClick={() => setSelectedMaterialReport(null)}>
+                  Back to List
+                </button>
+              </div>
+              <div style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '20px' }}>
+                  <h4>Summary</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginTop: '10px' }}>
+                    <div style={{ padding: '15px', backgroundColor: '#e3f2fd', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '14px', color: '#666' }}>Total Added</div>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                        {selectedMaterialReport.summary.totalAdded} {selectedMaterialReport.material.unit}
+                      </div>
+                    </div>
+                    <div style={{ padding: '15px', backgroundColor: '#fff3cd', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '14px', color: '#666' }}>Total Distributed</div>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                        {selectedMaterialReport.summary.totalDistributed} {selectedMaterialReport.material.unit}
+                      </div>
+                    </div>
+                    <div style={{ padding: '15px', backgroundColor: '#d4edda', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '14px', color: '#666' }}>Remaining</div>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                        {selectedMaterialReport.summary.remaining} {selectedMaterialReport.material.unit}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedMaterialReport.distribution && selectedMaterialReport.distribution.length > 0 && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4>Distribution to Sites</h4>
+                    <table className="table" style={{ marginTop: '10px' }}>
+                      <thead>
+                        <tr>
+                          <th>Site Name</th>
+                          <th>Quantity</th>
+                          <th>Total Value</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedMaterialReport.distribution.map((dist: any, idx: number) => (
+                          <tr key={idx}>
+                            <td>{dist.siteName}</td>
+                            <td>{dist.totalQuantity} {selectedMaterialReport.material.unit}</td>
+                            <td>₹{dist.totalValue.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : materialWiseReports ? (
+            <div className="card">
+              <div className="card-header">
+                <h3 className="card-title">Material-Wise Reports</h3>
+              </div>
+              <div style={{ padding: '20px' }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Material</th>
+                      <th>Unit</th>
+                      <th>Total Added</th>
+                      <th>Total Distributed</th>
+                      <th>Remaining</th>
+                      <th>Site Distribution</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {materialWiseReports.materialReports.map((report: any) => (
+                      <tr key={report.material.id}>
+                        <td>{report.material.name}</td>
+                        <td>{report.material.unit}</td>
+                        <td>{report.summary.totalAdded} {report.material.unit}</td>
+                        <td>{report.summary.totalDistributed} {report.material.unit}</td>
+                        <td>{report.summary.remaining} {report.material.unit}</td>
+                        <td>
+                          {report.siteDistribution.length > 0 ? (
+                            <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                              {report.siteDistribution.map((dist: any, idx: number) => (
+                                <li key={idx}>{dist.siteName}: {dist.quantity} {report.material.unit}</li>
+                              ))}
+                            </ul>
+                          ) : 'N/A'}
+                        </td>
+                        <td>
+                          <button 
+                            className="btn btn-primary"
+                            onClick={() => handleMaterialWiseSelect(report.material.id)}
+                            style={{ padding: '5px 10px', fontSize: '12px' }}
+                          >
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px' }}>No material-wise reports available</div>
+          )}
+        </>
+      )}
+
+      {/* PDF Options Modal */}
+      <PDFOptionsModal
+        isOpen={showPDFModal}
+        onClose={() => setShowPDFModal(false)}
+        type="reports"
+        data={{
+          siteReports: reports,
+          materialReports: materialWiseReports,
+          selectedMaterialReport: selectedMaterialReport
+        }}
+        materialName={selectedMaterialReport?.material?.name}
+        siteName={selectedSite?.site?.name}
+        sites={reports?.siteReports?.map((r: any) => r.site) || []}
+      />
     </div>
   );
 };

@@ -18,7 +18,7 @@ export const getAllCompanies = async (req: Request, res: Response) => {
 
 export const createCompany = async (req: Request, res: Response) => {
   try {
-    const { name, gstin, address } = req.body;
+    const { name, gstin, address, contactPerson, mobileNumber, emailId } = req.body;
 
     // Check if company with same name already exists
     const existingCompany = await prisma.company.findUnique({
@@ -30,7 +30,14 @@ export const createCompany = async (req: Request, res: Response) => {
     }
 
     const company = await prisma.company.create({
-      data: { name, gstin, address }
+      data: { 
+        name, 
+        gstin: gstin || null, 
+        address: address || null,
+        contactPerson: contactPerson || null,
+        mobileNumber: mobileNumber || null,
+        emailId: emailId || null
+      }
     });
 
     res.status(201).json(company);
@@ -43,7 +50,7 @@ export const createCompany = async (req: Request, res: Response) => {
 export const updateCompany = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, gstin, address }: UpdateCompanyRequest = req.body;
+    const { name, gstin, address, contactPerson, mobileNumber, emailId }: UpdateCompanyRequest = req.body;
     const userId = (req as any).user.id;
     const userRole = (req as any).user.role;
 
@@ -74,7 +81,14 @@ export const updateCompany = async (req: Request<{ id: string }>, res: Response)
 
     const company = await prisma.company.update({
       where: { id },
-      data: { name, gstin, address }
+      data: { 
+        name, 
+        gstin: gstin !== undefined ? gstin : undefined, 
+        address: address !== undefined ? address : undefined,
+        contactPerson: contactPerson !== undefined ? contactPerson : undefined,
+        mobileNumber: mobileNumber !== undefined ? mobileNumber : undefined,
+        emailId: emailId !== undefined ? emailId : undefined
+      }
     });
 
     res.json(company);
@@ -135,10 +149,17 @@ export const bulkCreateCompanies = async (req: Request, res: Response) => {
 
     // Validate all companies first
     const errors: Array<{ name: string; error: string }> = [];
-    const companiesToCreate: Array<{ name: string; gstin: string | null; address: string | null }> = [];
+    const companiesToCreate: Array<{ 
+      name: string; 
+      gstin: string | null; 
+      address: string | null;
+      contactPerson: string | null;
+      mobileNumber: string | null;
+      emailId: string | null;
+    }> = [];
 
     for (const companyData of companies) {
-      const { name, gstin, address } = companyData;
+      const { name, gstin, address, contactPerson, mobileNumber, emailId } = companyData;
 
       if (!name || typeof name !== 'string' || name.trim() === '') {
         errors.push({ name: name || 'Unknown', error: 'Name is required' });
@@ -148,6 +169,9 @@ export const bulkCreateCompanies = async (req: Request, res: Response) => {
       const trimmedName = name.trim();
       const trimmedGstin = gstin?.trim() || null;
       const trimmedAddress = address?.trim() || null;
+      const trimmedContactPerson = contactPerson?.trim() || null;
+      const trimmedMobileNumber = mobileNumber?.trim() || null;
+      const trimmedEmailId = emailId?.trim() || null;
 
       // Check if company with same name already exists
       const existingByName = await prisma.company.findUnique({
@@ -174,7 +198,10 @@ export const bulkCreateCompanies = async (req: Request, res: Response) => {
       companiesToCreate.push({
         name: trimmedName,
         gstin: trimmedGstin,
-        address: trimmedAddress
+        address: trimmedAddress,
+        contactPerson: trimmedContactPerson,
+        mobileNumber: trimmedMobileNumber,
+        emailId: trimmedEmailId
       });
     }
 

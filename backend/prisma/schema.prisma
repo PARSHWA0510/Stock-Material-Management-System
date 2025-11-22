@@ -27,12 +27,15 @@ model User {
 }
 
 model Company {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  gstin     String?  @unique
-  address   String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  name          String   @unique
+  gstin         String?  @unique
+  address       String?
+  contactPerson String?  @map("contact_person")
+  mobileNumber  String?  @map("mobile_number")
+  emailId       String?  @map("email_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
   purchaseBills PurchaseBill[]

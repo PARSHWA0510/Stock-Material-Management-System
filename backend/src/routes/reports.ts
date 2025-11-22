@@ -1,5 +1,5 @@
 import express from 'express';
-import { getSiteMaterialReports, getSiteMaterialHistory } from '../controllers/reportsController';
+import { getSiteMaterialReports, getSiteMaterialHistory, getMaterialWiseReports } from '../controllers/reportsController';
 import { authenticateToken, requireRole } from '../middleware/auth';
 
 const router = express.Router();
@@ -9,5 +9,8 @@ router.get('/site-materials', authenticateToken, getSiteMaterialReports);
 
 // Get detailed material history for a specific site and material
 router.get('/site-materials/:site_id/:material_id/history', authenticateToken, getSiteMaterialHistory);
+
+// Get material-wise reports
+router.get('/material-wise', authenticateToken, getMaterialWiseReports);
 
 export default router;

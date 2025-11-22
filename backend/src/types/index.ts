@@ -12,6 +12,9 @@ export interface Company {
   name: string;
   gstin?: string;
   address?: string;
+  contactPerson?: string;
+  mobileNumber?: string;
+  emailId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -83,6 +86,9 @@ export interface UpdateCompanyRequest {
   name?: string;
   gstin?: string;
   address?: string;
+  contactPerson?: string;
+  mobileNumber?: string;
+  emailId?: string;
 }
 
 export interface UpdateSiteRequest {

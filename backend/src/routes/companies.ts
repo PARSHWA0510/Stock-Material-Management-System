@@ -15,7 +15,10 @@ router.get('/', getAllCompanies);
 router.post('/', requireRole(['ADMIN']), [
   body('name').notEmpty().trim(),
   body('gstin').optional().trim(),
-  body('address').optional().trim()
+  body('address').optional().trim(),
+  body('contactPerson').optional().trim(),
+  body('mobileNumber').optional().trim(),
+  body('emailId').optional().trim()
 ], createCompany);
 
 // Bulk create companies (Admin only)
@@ -25,7 +28,10 @@ router.post('/bulk', requireRole(['ADMIN']), bulkCreateCompanies);
 router.put('/:id', requireRole(['ADMIN']), [
   body('name').optional().trim(),
   body('gstin').optional().trim(),
-  body('address').optional().trim()
+  body('address').optional().trim(),
+  body('contactPerson').optional().trim(),
+  body('mobileNumber').optional().trim(),
+  body('emailId').optional().trim()
 ], updateCompany);
 
 // Delete company (Admin only)

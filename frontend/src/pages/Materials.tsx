@@ -400,35 +400,35 @@ const Materials: React.FC = () => {
             <form onSubmit={handleSubmit}>
               {parsedMaterials.length === 0 && (
                 <>
-                  <div className="form-group">
-                    <label className="form-label">Name</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Unit</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.unit}
-                      onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">HSN/SAC</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.hsnSac}
-                      onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
-                    />
-                  </div>
+              <div className="form-group">
+                <label className="form-label">Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Unit</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.unit}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">HSN/SAC</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.hsnSac}
+                  onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
+                />
+              </div>
                 </>
               )}
               {parsedMaterials.length > 0 && (

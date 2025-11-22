@@ -13,7 +13,10 @@ const Companies: React.FC = () => {
   const [formData, setFormData] = useState<CreateCompanyRequest>({
     name: '',
     gstin: '',
-    address: ''
+    address: '',
+    contactPerson: '',
+    mobileNumber: '',
+    emailId: ''
   });
 
   const { user } = useAuth();
@@ -68,7 +71,10 @@ const Companies: React.FC = () => {
     setFormData({
       name: company.name,
       gstin: company.gstin || '',
-      address: company.address || ''
+      address: company.address || '',
+      contactPerson: company.contactPerson || '',
+      mobileNumber: company.mobileNumber || '',
+      emailId: company.emailId || ''
     });
     setShowModal(true);
   };
@@ -89,7 +95,7 @@ const Companies: React.FC = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingCompany(null);
-    setFormData({ name: '', gstin: '', address: '' });
+    setFormData({ name: '', gstin: '', address: '', contactPerson: '', mobileNumber: '', emailId: '' });
     setParsedCompanies([]);
     setShowPreview(false);
     setShowPreviewModal(false);
@@ -102,7 +108,7 @@ const Companies: React.FC = () => {
 
   const handleAddNew = () => {
     setEditingCompany(null);
-    setFormData({ name: '', gstin: '', address: '' });
+    setFormData({ name: '', gstin: '', address: '', contactPerson: '', mobileNumber: '', emailId: '' });
     setParsedCompanies([]);
     setShowPreview(false);
     setShowPreviewModal(false);
@@ -149,7 +155,10 @@ const Companies: React.FC = () => {
       const companies: CreateCompanyRequest[] = (jsonData as Record<string, unknown>[]).map((row) => ({
         name: (row.Name || row.name || '') as string,
         gstin: (row.GSTIN || row.gstin || row.GSTINNumber || row.gstinNumber || '') as string,
-        address: (row.Address || row.address || '') as string
+        address: (row.Address || row.address || '') as string,
+        contactPerson: (row['Contact Person'] || row['ContactPerson'] || row.contactPerson || '') as string,
+        mobileNumber: (row['Mobile Number'] || row['MobileNumber'] || row.mobileNumber || '') as string,
+        emailId: (row['Email ID'] || row['EmailID'] || row.emailId || row.email || '') as string
       })).filter((company: CreateCompanyRequest) => company.name.trim() !== '');
 
       if (companies.length === 0) {
@@ -278,6 +287,9 @@ const Companies: React.FC = () => {
               <th>Name</th>
               <th>GSTIN</th>
               <th>Address</th>
+              <th>Contact Person</th>
+              <th>Mobile Number</th>
+              <th>Email ID</th>
               <th>Created</th>
               {isAdmin && <th>Actions</th>}
             </tr>
@@ -288,6 +300,9 @@ const Companies: React.FC = () => {
                 <td>{company.name}</td>
                 <td>{company.gstin || '-'}</td>
                 <td>{company.address || '-'}</td>
+                <td>{company.contactPerson || '-'}</td>
+                <td>{company.mobileNumber || '-'}</td>
+                <td>{company.emailId || '-'}</td>
                 <td>{new Date(company.createdAt).toLocaleDateString()}</td>
                 {isAdmin && (
                   <td>
@@ -348,7 +363,7 @@ const Companies: React.FC = () => {
                   style={{ marginBottom: '10px', width: '100%' }}
                 />
                 <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-                  Excel format: Columns should be "Name", "GSTIN" (optional), "Address" (optional)
+                  Excel format: Columns should be "Name", "GSTIN" (optional), "Address" (optional), "Contact Person" (optional), "Mobile Number" (optional), "Email ID" (optional)
                 </div>
                 
                 {showPreview && parsedCompanies.length > 0 && (
@@ -400,32 +415,59 @@ const Companies: React.FC = () => {
             <form onSubmit={handleSubmit}>
               {parsedCompanies.length === 0 && (
                 <>
+              <div className="form-group">
+                <label className="form-label">Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">GSTIN</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.gstin}
+                  onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Address</label>
+                <textarea
+                  className="form-input"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  rows={3}
+                />
+              </div>
                   <div className="form-group">
-                    <label className="form-label">Name</label>
+                    <label className="form-label">Contact Person</label>
                     <input
                       type="text"
                       className="form-input"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
+                      value={formData.contactPerson}
+                      onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">GSTIN</label>
+                    <label className="form-label">Mobile Number</label>
                     <input
                       type="text"
                       className="form-input"
-                      value={formData.gstin}
-                      onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+                      value={formData.mobileNumber}
+                      onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Address</label>
-                    <textarea
+                    <label className="form-label">Email ID</label>
+                    <input
+                      type="email"
                       className="form-input"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      rows={3}
+                      value={formData.emailId}
+                      onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
                     />
                   </div>
                 </>
@@ -513,6 +555,9 @@ const Companies: React.FC = () => {
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Name</th>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>GSTIN</th>
                     <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Address</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Contact Person</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Mobile Number</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Email ID</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -522,6 +567,9 @@ const Companies: React.FC = () => {
                       <td style={{ padding: '12px' }}>{company.name}</td>
                       <td style={{ padding: '12px' }}>{company.gstin || '-'}</td>
                       <td style={{ padding: '12px' }}>{company.address || '-'}</td>
+                      <td style={{ padding: '12px' }}>{company.contactPerson || '-'}</td>
+                      <td style={{ padding: '12px' }}>{company.mobileNumber || '-'}</td>
+                      <td style={{ padding: '12px' }}>{company.emailId || '-'}</td>
                     </tr>
                   ))}
                 </tbody>

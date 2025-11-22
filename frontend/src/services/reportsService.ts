@@ -13,5 +13,12 @@ export const reportsService = {
   getSiteMaterialHistory: async (siteId: string, materialId: string): Promise<SiteMaterialHistory> => {
     const response = await api.get(`/reports/site-materials/${siteId}/${materialId}/history`);
     return response.data;
+  },
+
+  // Get material-wise reports
+  getMaterialWiseReports: async (materialId?: string): Promise<any> => {
+    const params = materialId ? { material_id: materialId } : {};
+    const response = await api.get('/reports/material-wise', { params });
+    return response.data;
   }
 };

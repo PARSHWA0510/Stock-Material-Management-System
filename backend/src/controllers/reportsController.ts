@@ -387,3 +387,228 @@ export const getSiteMaterialHistory = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch site material history' });
   }
 };
+
+// Get material-wise reports showing additions and site distributions
+export const getMaterialWiseReports = async (req: Request, res: Response) => {
+  try {
+    const { material_id } = req.query;
+
+    // If specific material_id is provided, get data for that material only
+    if (material_id) {
+      const material = await prisma.material.findUnique({
+        where: { id: material_id as string }
+      });
+
+      if (!material) {
+        return res.status(404).json({ error: 'Material not found' });
+      }
+
+      // Get all purchase bills that added this material
+      const purchaseBills = await prisma.purchaseBill.findMany({
+        where: {
+          items: {
+            some: {
+              materialId: material_id as string
+            }
+          }
+        },
+        include: {
+          items: {
+            where: { materialId: material_id as string },
+            include: {
+              material: true
+            }
+          },
+          company: true
+        },
+        orderBy: { billDate: 'desc' }
+      });
+
+      // Get all material issues that sent this material to sites
+      const materialIssues = await prisma.materialIssue.findMany({
+        where: {
+          items: {
+            some: {
+              materialId: material_id as string
+            }
+          }
+        },
+        include: {
+          items: {
+            where: { materialId: material_id as string },
+            include: {
+              material: true
+            }
+          },
+          site: true,
+          fromGodown: true
+        },
+        orderBy: { issueDate: 'desc' }
+      });
+
+      // Calculate total added from purchase bills
+      let totalAdded = 0;
+      const additions = [];
+      for (const bill of purchaseBills) {
+        for (const item of bill.items) {
+          const quantity = Number(item.quantity);
+          totalAdded += quantity;
+          additions.push({
+            date: bill.billDate,
+            quantity,
+            rate: Number(item.rate),
+            totalValue: quantity * Number(item.rate),
+            invoiceNumber: bill.invoiceNumber,
+            company: bill.company.name,
+            deliveredTo: bill.deliveredToType === 'GODOWN' ? 'Godown' : 'Site',
+            purchaseBillId: bill.id
+          });
+        }
+      }
+
+      // Calculate distribution to sites
+      const siteDistribution: { [key: string]: { siteName: string; totalQuantity: number; totalValue: number; issues: any[] } } = {};
+      let totalDistributed = 0;
+
+      for (const issue of materialIssues) {
+        for (const item of issue.items) {
+          const quantity = Number(item.quantity);
+          const rate = Number(item.rate);
+          const totalValue = quantity * rate;
+          totalDistributed += quantity;
+
+          if (!siteDistribution[issue.siteId]) {
+            siteDistribution[issue.siteId] = {
+              siteName: issue.site.name,
+              totalQuantity: 0,
+              totalValue: 0,
+              issues: []
+            };
+          }
+
+          siteDistribution[issue.siteId].totalQuantity += quantity;
+          siteDistribution[issue.siteId].totalValue += totalValue;
+          siteDistribution[issue.siteId].issues.push({
+            date: issue.issueDate,
+            quantity,
+            rate,
+            totalValue,
+            issueId: issue.identifier,
+            fromGodown: issue.fromGodown?.name || 'Direct'
+          });
+        }
+      }
+
+      const distribution = Object.values(siteDistribution);
+
+      return res.json({
+        material: {
+          id: material.id,
+          name: material.name,
+          unit: material.unit,
+          hsnSac: material.hsnSac
+        },
+        summary: {
+          totalAdded,
+          totalDistributed,
+          remaining: totalAdded - totalDistributed
+        },
+        additions,
+        distribution
+      });
+    }
+
+    // Get all materials with their summaries
+    const materials = await prisma.material.findMany({
+      orderBy: { name: 'asc' }
+    });
+
+    const materialReports = [];
+
+    for (const material of materials) {
+      // Get total added
+      const purchaseBills = await prisma.purchaseBill.findMany({
+        where: {
+          items: {
+            some: {
+              materialId: material.id
+            }
+          }
+        },
+        include: {
+          items: {
+            where: { materialId: material.id }
+          }
+        }
+      });
+
+      let totalAdded = 0;
+      for (const bill of purchaseBills) {
+        for (const item of bill.items) {
+          totalAdded += Number(item.quantity);
+        }
+      }
+
+      // Get total distributed
+      const materialIssues = await prisma.materialIssue.findMany({
+        where: {
+          items: {
+            some: {
+              materialId: material.id
+            }
+          }
+        },
+        include: {
+          items: {
+            where: { materialId: material.id }
+          },
+          site: true
+        }
+      });
+
+      let totalDistributed = 0;
+      const siteDistribution: { [key: string]: number } = {};
+      for (const issue of materialIssues) {
+        for (const item of issue.items) {
+          const quantity = Number(item.quantity);
+          totalDistributed += quantity;
+          if (!siteDistribution[issue.site.name]) {
+            siteDistribution[issue.site.name] = 0;
+          }
+          siteDistribution[issue.site.name] += quantity;
+        }
+      }
+
+      materialReports.push({
+        material: {
+          id: material.id,
+          name: material.name,
+          unit: material.unit,
+          hsnSac: material.hsnSac
+        },
+        summary: {
+          totalAdded,
+          totalDistributed,
+          remaining: totalAdded - totalDistributed
+        },
+        siteDistribution: Object.entries(siteDistribution).map(([siteName, quantity]) => ({
+          siteName,
+          quantity
+        }))
+      });
+    }
+
+    return res.json({
+      materialReports,
+      summary: {
+        totalMaterials: materialReports.length,
+        totalAdded: materialReports.reduce((sum, report) => sum + report.summary.totalAdded, 0),
+        totalDistributed: materialReports.reduce((sum, report) => sum + report.summary.totalDistributed, 0)
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching material-wise reports:', error);
+    res.status(500).json({ error: 'Failed to fetch material-wise reports' });
+  }
+};

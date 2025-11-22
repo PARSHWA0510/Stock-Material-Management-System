@@ -2,11 +2,46 @@ const XLSX = require('xlsx');
 
 // Generate Companies Excel file
 const companiesData = [
-  { Name: 'ABC Construction Ltd', GSTIN: '29ABCDE1234F1Z5', Address: '123 Main Street, Mumbai, Maharashtra 400001' },
-  { Name: 'XYZ Builders Pvt Ltd', GSTIN: '30FGHIJ5678K2L6', Address: '456 Park Avenue, Delhi, Delhi 110001' },
-  { Name: 'DEF Materials Co', GSTIN: '27KLMNO9012P3Q7', Address: '789 Industrial Area, Bangalore, Karnataka 560001' },
-  { Name: 'GHI Suppliers', GSTIN: '', Address: '321 Trade Center, Pune, Maharashtra 411001' },
-  { Name: 'JKL Enterprises', GSTIN: '24RSTUV3456W4X8', Address: '654 Business Park, Hyderabad, Telangana 500001' }
+  { 
+    Name: 'ABC Construction Ltd', 
+    GSTIN: '29ABCDE1234F1Z5', 
+    Address: '123 Main Street, Mumbai, Maharashtra 400001',
+    'Contact Person': 'Rajesh Kumar',
+    'Mobile Number': '9876543210',
+    'Email ID': 'rajesh.kumar@abcconstruction.com'
+  },
+  { 
+    Name: 'XYZ Builders Pvt Ltd', 
+    GSTIN: '30FGHIJ5678K2L6', 
+    Address: '456 Park Avenue, Delhi, Delhi 110001',
+    'Contact Person': 'Priya Sharma',
+    'Mobile Number': '9876543211',
+    'Email ID': 'priya.sharma@xyzbuilders.com'
+  },
+  { 
+    Name: 'DEF Materials Co', 
+    GSTIN: '27KLMNO9012P3Q7', 
+    Address: '789 Industrial Area, Bangalore, Karnataka 560001',
+    'Contact Person': 'Amit Patel',
+    'Mobile Number': '9876543212',
+    'Email ID': 'amit.patel@defmaterials.com'
+  },
+  { 
+    Name: 'GHI Suppliers', 
+    GSTIN: '', 
+    Address: '321 Trade Center, Pune, Maharashtra 411001',
+    'Contact Person': 'Sneha Desai',
+    'Mobile Number': '9876543213',
+    'Email ID': 'sneha.desai@ghisuppliers.com'
+  },
+  { 
+    Name: 'JKL Enterprises', 
+    GSTIN: '24RSTUV3456W4X8', 
+    Address: '654 Business Park, Hyderabad, Telangana 500001',
+    'Contact Person': 'Vikram Singh',
+    'Mobile Number': '9876543214',
+    'Email ID': 'vikram.singh@jklenterprises.com'
+  }
 ];
 
 const companiesWorkbook = XLSX.utils.book_new();

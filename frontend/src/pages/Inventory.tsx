@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { inventoryService } from '../services/inventoryService';
 import { godownService } from '../services/godownService';
+import PDFOptionsModal from '../components/PDFOptionsModal';
 import type { InventoryItem, StockTransaction, ApiError } from '../types';
 
 const Inventory: React.FC = () => {
@@ -12,6 +13,7 @@ const Inventory: React.FC = () => {
   const [showTransactions, setShowTransactions] = useState(false);
   const [transactions, setTransactions] = useState<StockTransaction[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState<string>('');
+  const [showPDFModal, setShowPDFModal] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -87,6 +89,13 @@ const Inventory: React.FC = () => {
       <div className="header">
         <h1>Inventory</h1>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowPDFModal(true)}
+            disabled={inventory.length === 0}
+          >
+            Download PDF
+          </button>
           <select
             className="form-select"
             value={selectedGodown}
@@ -358,6 +367,15 @@ const Inventory: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* PDF Options Modal */}
+      <PDFOptionsModal
+        isOpen={showPDFModal}
+        onClose={() => setShowPDFModal(false)}
+        type="inventory"
+        data={inventory}
+        godowns={godowns}
+      />
     </div>
   );
 };

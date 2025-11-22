@@ -38,9 +38,24 @@ const PurchaseBills: React.FC = () => {
     fetchData();
   }, []);
 
+  // Auto-fetch GSTIN when company is selected
+  useEffect(() => {
+    if (formData.companyId) {
+      const selectedCompany = companies.find(c => c.id === formData.companyId);
+      if (selectedCompany && selectedCompany.gstin) {
+        setFormData(prev => ({ ...prev, gstinNumber: selectedCompany.gstin || '' }));
+      } else {
+        setFormData(prev => ({ ...prev, gstinNumber: '' }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, gstinNumber: '' }));
+    }
+  }, [formData.companyId, companies]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(''); // Clear any previous errors
       const [purchaseBillsData, materialsData, companiesData, sitesData, godownsData] = await Promise.all([
         purchaseBillService.getAll(),
         materialService.getAll(),
@@ -120,6 +135,7 @@ const PurchaseBills: React.FC = () => {
     }
 
     try {
+      setError(''); // Clear any previous errors
       // Convert string values to numbers for submission
       const submitData = {
         ...formData,
@@ -132,6 +148,7 @@ const PurchaseBills: React.FC = () => {
       };
 
       await purchaseBillService.create(submitData);
+      setError(''); // Clear error on success
       setShowModal(false);
       setFormData({
         companyId: '',
@@ -142,7 +159,6 @@ const PurchaseBills: React.FC = () => {
         deliveredToId: '',
         items: []
       });
-      setError('');
       fetchData();
     } catch (error: unknown) {
       setError((error as ApiError)?.response?.data?.message || 'Failed to create purchase bill');
@@ -152,7 +168,9 @@ const PurchaseBills: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this purchase bill?')) {
       try {
+        setError(''); // Clear any previous errors
         await purchaseBillService.delete(id);
+        setError(''); // Clear error on success
         fetchData();
       } catch (error: unknown) {
         setError((error as ApiError)?.response?.data?.message || 'Failed to delete purchase bill');
@@ -250,7 +268,10 @@ const PurchaseBills: React.FC = () => {
     <div>
       <div className="header">
         <h1>Purchase Bills</h1>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" onClick={() => {
+          setError(''); // Clear any previous errors
+          setShowModal(true);
+        }}>
           Add Purchase Bill
         </button>
       </div>
@@ -434,8 +455,10 @@ const PurchaseBills: React.FC = () => {
                   <input
                     type="text"
                     className="form-input"
-                    value={formData.gstinNumber}
-                    onChange={(e) => setFormData({ ...formData, gstinNumber: e.target.value })}
+                    value={formData.gstinNumber || ''}
+                    readOnly
+                    style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                    placeholder="Auto-filled from selected company"
                   />
                 </div>
                 <div className="form-group">

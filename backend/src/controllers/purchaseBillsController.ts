@@ -17,8 +17,14 @@ export const getAllPurchaseBills = async (req: Request, res: Response) => {
             material: true
           }
         }
-      },
-      orderBy: { createdAt: 'desc' }
+      }
+    });
+
+    // Sort by bill date in descending order (latest first)
+    purchaseBills.sort((a, b) => {
+      const dateA = new Date(a.billDate).getTime();
+      const dateB = new Date(b.billDate).getTime();
+      return dateB - dateA; // Descending order (newest first)  
     });
 
     res.json(purchaseBills);
@@ -71,6 +77,14 @@ export const createPurchaseBill = async (req: Request<{}, any, CreatePurchaseBil
       return res.status(400).json({ message: 'Company not found' });
     }
 
+    // Validate invoice number is provided
+    if (!invoiceNumber || invoiceNumber.trim() === '') {
+      return res.status(400).json({ message: 'Invoice number is required' });
+    }
+
+    // Auto-fetch GSTIN from company if not provided
+    const finalGstinNumber = gstinNumber || company.gstin || null;
+
     // Validate delivered to location exists
     if (deliveredToType === 'GODOWN') {
       const godown = await prisma.godown.findUnique({
@@ -102,8 +116,8 @@ export const createPurchaseBill = async (req: Request<{}, any, CreatePurchaseBil
     const purchaseBill = await prisma.purchaseBill.create({
       data: {
         companyId,
-        invoiceNumber,
-        gstinNumber,
+        invoiceNumber: invoiceNumber.trim(),
+        gstinNumber: finalGstinNumber,
         billDate: new Date(billDate),
         deliveredToType,
         deliveredToId,

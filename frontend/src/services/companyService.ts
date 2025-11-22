@@ -12,6 +12,11 @@ export const companyService = {
     return response.data;
   },
 
+  bulkCreate: async (companies: CreateCompanyRequest[]): Promise<any> => {
+    const response = await api.post('/companies/bulk', { companies });
+    return response.data;
+  },
+
   update: async (id: string, data: UpdateCompanyRequest): Promise<Company> => {
     const response = await api.put(`/companies/${id}`, data);
     return response.data;

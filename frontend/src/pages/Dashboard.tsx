@@ -35,6 +35,7 @@ const Dashboard: React.FC = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
+      setError(''); // Clear any previous errors
       const [materials, companies, sites, godowns, purchaseBills, materialIssues, inventory] = await Promise.all([
         materialService.getAll(),
         companyService.getAll(),

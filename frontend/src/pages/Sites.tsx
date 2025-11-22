@@ -24,6 +24,7 @@ const Sites: React.FC = () => {
   const fetchSites = async () => {
     try {
       setLoading(true);
+      setError(''); // Clear any previous errors
       const data = await siteService.getAll();
       setSites(data);
     } catch (error: unknown) {
@@ -36,11 +37,13 @@ const Sites: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setError(''); // Clear any previous errors
       if (editingSite) {
         await siteService.update(editingSite.id, formData);
       } else {
         await siteService.create(formData);
       }
+      setError(''); // Clear error on success
       setShowModal(false);
       setEditingSite(null);
       setFormData({ name: '', address: '' });
@@ -62,7 +65,9 @@ const Sites: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this site?')) {
       try {
+        setError(''); // Clear any previous errors
         await siteService.delete(id);
+        setError(''); // Clear error on success
         fetchSites();
       } catch (error: unknown) {
         setError((error as ApiError)?.response?.data?.message || 'Failed to delete site');
@@ -71,6 +76,7 @@ const Sites: React.FC = () => {
   };
 
   const handleAddNew = () => {
+    setError(''); // Clear any previous errors
     setEditingSite(null);
     setFormData({ name: '', address: '' });
     setShowModal(true);

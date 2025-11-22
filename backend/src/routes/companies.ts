@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { getAllCompanies, createCompany, updateCompany, deleteCompany } from '../controllers/companiesController';
+import { getAllCompanies, createCompany, updateCompany, deleteCompany, bulkCreateCompanies } from '../controllers/companiesController';
 import { authenticateToken, requireRole } from '../middleware/auth';
 
 const router = Router();
@@ -17,6 +17,9 @@ router.post('/', requireRole(['ADMIN']), [
   body('gstin').optional().trim(),
   body('address').optional().trim()
 ], createCompany);
+
+// Bulk create companies (Admin only)
+router.post('/bulk', requireRole(['ADMIN']), bulkCreateCompanies);
 
 // Update company (Admin only)
 router.put('/:id', requireRole(['ADMIN']), [

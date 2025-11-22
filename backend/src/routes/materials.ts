@@ -5,7 +5,8 @@ import {
   getMaterialById, 
   createMaterial, 
   updateMaterial, 
-  deleteMaterial 
+  deleteMaterial,
+  bulkCreateMaterials
 } from '../controllers/materialsController';
 import { authenticateToken, requireRole } from '../middleware/auth';
 
@@ -26,6 +27,9 @@ router.post('/', requireRole(['ADMIN']), [
   body('unit').notEmpty().trim(),
   body('hsnSac').optional().trim()
 ], createMaterial);
+
+// Bulk create materials (Admin only)
+router.post('/bulk', requireRole(['ADMIN']), bulkCreateMaterials);
 
 // Update material (Admin only)
 router.put('/:id', requireRole(['ADMIN']), [

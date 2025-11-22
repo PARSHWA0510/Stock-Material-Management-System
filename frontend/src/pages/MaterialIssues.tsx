@@ -39,6 +39,7 @@ const MaterialIssues: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(''); // Clear any previous errors
       const [issuesData, materialsData, sitesData, godownsData] = await Promise.all([
         materialIssueService.getAll(),
         materialService.getAll(),
@@ -213,6 +214,8 @@ const MaterialIssues: React.FC = () => {
       };
       
       await materialIssueService.create(apiData);
+      setModalError(''); // Clear error on success
+      setError(''); // Clear main error on success
       setShowModal(false);
       setFormData({
         siteId: '',
@@ -220,7 +223,6 @@ const MaterialIssues: React.FC = () => {
         issueDate: new Date().toISOString().split('T')[0],
         items: []
       });
-      setModalError('');
       setStockData({});
       fetchData();
     } catch (error: unknown) {
@@ -231,7 +233,9 @@ const MaterialIssues: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this material issue?')) {
       try {
+        setError(''); // Clear any previous errors
         await materialIssueService.delete(id);
+        setError(''); // Clear error on success
         fetchData();
       } catch (error: unknown) {
         setError((error as ApiError)?.response?.data?.message || 'Failed to delete material issue');
@@ -245,8 +249,9 @@ const MaterialIssues: React.FC = () => {
   };
 
   const handleModalOpen = () => {
+    setError(''); // Clear any previous errors
+    setModalError(''); // Clear modal errors
     setShowModal(true);
-    setModalError('');
     setStockData({});
     setMaterialRates({});
     // Fetch stock data and material rates

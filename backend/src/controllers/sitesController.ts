@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 
 export const getAllSites = async (req: Request, res: Response) => {
   try {
-    const sites = await prisma.site.findMany({
-      orderBy: { name: 'asc' }
-    });
+    const sites = await prisma.site.findMany();
+    // Sort case-insensitively by name
+    sites.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     res.json(sites);
   } catch (error) {
     console.error('Get sites error:', error);

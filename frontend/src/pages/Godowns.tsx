@@ -24,6 +24,7 @@ const Godowns: React.FC = () => {
   const fetchGodowns = async () => {
     try {
       setLoading(true);
+      setError(''); // Clear any previous errors
       const data = await godownService.getAll();
       setGodowns(data);
     } catch (error: unknown) {
@@ -36,11 +37,13 @@ const Godowns: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setError(''); // Clear any previous errors
       if (editingGodown) {
         await godownService.update(editingGodown.id, formData);
       } else {
         await godownService.create(formData);
       }
+      setError(''); // Clear error on success
       setShowModal(false);
       setEditingGodown(null);
       setFormData({ name: '', address: '' });
@@ -51,6 +54,7 @@ const Godowns: React.FC = () => {
   };
 
   const handleEdit = (godown: Godown) => {
+    setError(''); // Clear any previous errors
     setEditingGodown(godown);
     setFormData({
       name: godown.name,
@@ -62,7 +66,9 @@ const Godowns: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this godown?')) {
       try {
+        setError(''); // Clear any previous errors
         await godownService.delete(id);
+        setError(''); // Clear error on success
         fetchGodowns();
       } catch (error: unknown) {
         setError((error as ApiError)?.response?.data?.message || 'Failed to delete godown');
@@ -71,6 +77,7 @@ const Godowns: React.FC = () => {
   };
 
   const handleAddNew = () => {
+    setError(''); // Clear any previous errors
     setEditingGodown(null);
     setFormData({ name: '', address: '' });
     setShowModal(true);

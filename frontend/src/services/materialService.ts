@@ -17,6 +17,11 @@ export const materialService = {
     return response.data;
   },
 
+  bulkCreate: async (materials: CreateMaterialRequest[]): Promise<any> => {
+    const response = await api.post('/materials/bulk', { materials });
+    return response.data;
+  },
+
   update: async (id: string, data: UpdateMaterialRequest): Promise<Material> => {
     const response = await api.put(`/materials/${id}`, data);
     return response.data;

@@ -20,6 +20,7 @@ const Inventory: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(''); // Clear any previous errors
       const [inventoryData, godownsData] = await Promise.all([
         inventoryService.getInventory(selectedGodown || undefined),
         godownService.getAll()

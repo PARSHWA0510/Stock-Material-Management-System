@@ -18,8 +18,14 @@ export const getAllMaterialIssues = async (req: Request, res: Response) => {
             material: true
           }
         }
-      },
-      orderBy: { createdAt: 'desc' }
+      }
+    });
+
+    // Sort by issue date in descending order (latest first)
+    materialIssues.sort((a, b) => {
+      const dateA = new Date(a.issueDate).getTime();
+      const dateB = new Date(b.issueDate).getTime();
+      return dateB - dateA; // Descending order (newest first)
     });
 
     res.json(materialIssues);

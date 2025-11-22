@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 
 export const getAllGodowns = async (req: Request, res: Response) => {
   try {
-    const godowns = await prisma.godown.findMany({
-      orderBy: { name: 'asc' }
-    });
+    const godowns = await prisma.godown.findMany();
+    // Sort case-insensitively by name
+    godowns.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     res.json(godowns);
   } catch (error) {
     console.error('Get godowns error:', error);

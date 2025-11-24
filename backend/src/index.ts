@@ -29,7 +29,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'https://stock-material-management-system.vercel.app',
-    ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
+    ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) : [])
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

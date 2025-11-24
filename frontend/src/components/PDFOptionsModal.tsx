@@ -76,10 +76,10 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
   type,
   data,
   materialName,
-  siteName,
-  godownName,
+  siteName: _siteName,
+  godownName: _godownName,
   godowns = [],
-  sites = []
+  sites: _sites = []
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>('');
   const [selectedSite, setSelectedSite] = useState<string>('');
@@ -223,22 +223,6 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
   };
 
   const materialReports = getMaterialReports();
-
-  // Get site reports for dropdown
-  const getSiteReports = () => {
-    if (type === 'reports') {
-      const siteReports = data.siteReports;
-      if (Array.isArray(siteReports)) {
-        return siteReports;
-      } else if (siteReports?.siteReports && Array.isArray(siteReports.siteReports)) {
-        return siteReports.siteReports;
-      }
-      return [];
-    }
-    return data.siteReports || [];
-  };
-
-  const siteReportsArray = getSiteReports();
 
   return (
     <div style={{

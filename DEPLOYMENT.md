@@ -1,5 +1,34 @@
 # 🚀 Deployment Guide
 
+This guide covers deployment options for the Stock Material Management System.
+
+## 🎯 Recommended: AWS Deployment
+
+For production deployment, we recommend AWS:
+- **Frontend**: AWS S3 + CloudFront
+- **Backend**: Docker container on EC2 t2.micro
+- **Database**: PostgreSQL on EC2
+
+👉 **See [AWS_DEPLOYMENT.md](./AWS_DEPLOYMENT.md) for complete step-by-step instructions.**
+
+### Quick Start (AWS)
+
+1. **Frontend on S3**:
+   ```bash
+   chmod +x deploy-frontend-s3.sh
+   ./deploy-frontend-s3.sh your-bucket-name us-east-1
+   ```
+
+2. **Backend on EC2**:
+   - Launch EC2 t2.micro instance
+   - Run setup script: `./backend/ec2-setup.sh`
+   - Build and deploy Docker container
+   - See AWS_DEPLOYMENT.md for details
+
+---
+
+## Alternative: Render + Vercel Deployment
+
 ## Backend Deployment on Render
 
 ### 1. Prepare Backend
@@ -62,3 +91,55 @@ After backend deployment:
 1. Run migrations: `npx prisma migrate deploy`
 2. Seed data: `npm run db:seed`
 3. Populate stock: `npm run db:populate-stock`
+
+---
+
+## Environment Variables Reference
+
+### Backend (.env)
+```bash
+DATABASE_URL=postgresql://username:password@host:port/database
+JWT_SECRET=your-super-secret-jwt-key-here
+JWT_EXPIRES_IN=7d
+PORT=3001
+NODE_ENV=production
+CORS_ORIGIN=http://localhost:5173,https://your-frontend-domain.com
+```
+
+### Frontend (.env.production)
+```bash
+VITE_API_BASE_URL=http://your-backend-url:3001/api
+# Or for HTTPS: https://your-backend-domain.com/api
+```
+
+---
+
+## Docker Deployment
+
+The backend includes a Dockerfile for containerized deployment.
+
+### Build Docker Image
+```bash
+cd backend
+docker build -t stock-management-backend:latest .
+```
+
+### Run Docker Container
+```bash
+docker run -d \
+  --name stock-backend \
+  --restart unless-stopped \
+  -p 3001:3001 \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  -e JWT_SECRET="your-secret" \
+  -e PORT=3001 \
+  -e NODE_ENV=production \
+  -e CORS_ORIGIN="https://your-frontend.com" \
+  stock-management-backend:latest
+```
+
+### Run Migrations
+```bash
+docker exec -it stock-backend npx prisma migrate deploy
+docker exec -it stock-backend npm run db:seed:prod
+```

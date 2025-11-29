@@ -7,7 +7,9 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 if [ -f "$PROJECT_DIR/.env" ]; then
-    export $(grep -v '^#' "$PROJECT_DIR/.env" | xargs)
+    set -a
+    source "$PROJECT_DIR/.env"
+    set +a
 fi
 
 # Configuration (load from .env, no hardcoded defaults)

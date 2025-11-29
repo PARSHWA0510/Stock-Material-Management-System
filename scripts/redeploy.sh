@@ -7,8 +7,11 @@ set -e
 
 # Load environment variables
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ -f "$SCRIPT_DIR/.env" ]; then
-    export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [ -f "$PROJECT_DIR/.env" ]; then
+    set -a
+    source "$PROJECT_DIR/.env"
+    set +a
 fi
 
 # Configuration (load from .env, no hardcoded defaults)
@@ -17,8 +20,6 @@ S3_REGION="${S3_REGION:-us-east-1}"
 EC2_IP="${EC2_IP:-}"
 EC2_USER="${EC2_USER:-ec2-user}"
 PEM_FILE="${PEM_FILE:-}"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Validate required variables
 if [ -z "$PEM_FILE" ] || [ -z "$EC2_IP" ] || [ -z "$S3_BUCKET" ]; then

@@ -5,8 +5,16 @@
 
 set -e
 
-BUCKET_NAME=${1:-"stock-management-frontend"}
-REGION=${2:-"us-east-1"}
+# Load environment variables
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [ -f "$PROJECT_DIR/.env" ]; then
+    export $(grep -v '^#' "$PROJECT_DIR/.env" | xargs)
+fi
+
+# Configuration (with defaults)
+BUCKET_NAME=${1:-"${S3_BUCKET:-stock-management-frontend}"}
+REGION=${2:-"${S3_REGION:-us-east-1}"}
 
 echo "🚀 Deploying Frontend to S3"
 echo "============================"

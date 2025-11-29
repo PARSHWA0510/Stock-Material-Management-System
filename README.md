@@ -109,30 +109,22 @@ When a purchase bill is marked as "delivered to site":
 
 ```
 Stock-Material-Management-System/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/     # API route handlers
-│   │   ├── middleware/      # Auth, validation middleware
-│   │   ├── routes/          # API routes
-│   │   ├── scripts/         # Utility and test scripts
-│   │   │   ├── README.md    # Scripts documentation
-│   │   │   ├── index.ts     # Scripts runner
-│   │   │   ├── test*.ts     # Test scripts
-│   │   │   └── *.ts         # Data management scripts
-│   │   ├── services/        # Business logic
-│   │   ├── types/           # TypeScript type definitions
-│   │   └── utils/           # Utility functions
-│   ├── prisma/
-│   │   └── schema.prisma    # Database schema
+├── backend/              # Backend application
+│   ├── src/             # Source code
+│   ├── prisma/          # Database schema and migrations
 │   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/           # Page components
-│   │   ├── services/        # API service calls
-│   │   ├── types/           # TypeScript type definitions
-│   │   └── utils/           # Utility functions
+├── frontend/            # Frontend application
+│   ├── src/             # Source code
 │   └── package.json
+├── scripts/             # Deployment and utility scripts
+│   ├── start-ec2.sh     # Start EC2 instance
+│   ├── stop-ec2.sh      # Stop EC2 instance
+│   ├── redeploy.sh      # Redeploy application
+│   └── ...
+├── docs/                # Documentation
+│   └── DEPLOYMENT.md    # Deployment guide
+├── samples/             # Sample data files
+├── .env.example         # Environment variables template
 └── README.md
 ```
 
@@ -170,6 +162,38 @@ npm run db:add-test-data
 
 For detailed documentation, see `backend/src/scripts/README.md`.
 
+## ☁️ Deployment
+
+### Setup
+
+1. Copy environment variables template:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your AWS credentials
+   ```
+
+2. Deploy frontend to S3:
+   ```bash
+   ./scripts/redeploy.sh frontend
+   ```
+
+3. Deploy backend to EC2:
+   ```bash
+   ./scripts/redeploy.sh backend
+   ```
+
+### EC2 Management
+
+```bash
+# Stop EC2 instance gracefully
+./scripts/stop-ec2.sh
+
+# Start EC2 instance and services
+./scripts/start-ec2.sh
+```
+
+For detailed deployment instructions, see [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+
 ## 🚧 Development Status
 
 - [x] Project setup and configuration
@@ -180,6 +204,7 @@ For detailed documentation, see `backend/src/scripts/README.md`.
 - [x] Complete CRUD operations
 - [x] Stock management system
 - [x] Utility scripts and testing
+- [x] AWS deployment scripts
 - [ ] Advanced reporting features
 
 ## 🤝 Contributing

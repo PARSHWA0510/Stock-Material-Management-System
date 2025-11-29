@@ -5,13 +5,27 @@
 
 set -e
 
-# Configuration
-S3_BUCKET="stock-management-frontend-773827705954"
-S3_REGION="us-east-1"
-EC2_IP="34.239.172.85"
-EC2_USER="ec2-user"
-PEM_FILE="/Users/aubergine/Desktop/stock-mgmt/stock-mgmt.pem"
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Load environment variables
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
+fi
+
+# Configuration (load from .env, no hardcoded defaults)
+S3_BUCKET="${S3_BUCKET:-}"
+S3_REGION="${S3_REGION:-us-east-1}"
+EC2_IP="${EC2_IP:-}"
+EC2_USER="${EC2_USER:-ec2-user}"
+PEM_FILE="${PEM_FILE:-}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Validate required variables
+if [ -z "$PEM_FILE" ] || [ -z "$EC2_IP" ] || [ -z "$S3_BUCKET" ]; then
+    echo "❌ Error: Required variables not set in .env file"
+    echo "   Please create .env file and set: PEM_FILE, EC2_IP, S3_BUCKET"
+    exit 1
+fi
 
 # Colors
 GREEN='\033[0;32m'

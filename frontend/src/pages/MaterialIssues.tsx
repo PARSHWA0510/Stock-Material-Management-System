@@ -3,6 +3,8 @@ import { materialIssueService } from '../services/materialIssueService';
 import { materialService } from '../services/materialService';
 import { siteService } from '../services/siteService';
 import { godownService } from '../services/godownService';
+import { inventoryService } from '../services/inventoryService';
+import { purchaseBillService } from '../services/purchaseBillService';
 import type { MaterialIssue, CreateMaterialIssueRequest, MaterialIssueFormData, Material, Site, Godown, ApiError } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -99,12 +101,7 @@ const MaterialIssues: React.FC = () => {
 
   const fetchStockData = async (godownId?: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/inventory${godownId ? `?godownId=${godownId}` : ''}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      const stockData = await response.json();
+      const stockData = await inventoryService.getInventory(godownId);
       
       const stockMap: {[key: string]: number} = {};
       stockData.forEach((item: { material: { id: string }; quantity: number }) => {
@@ -120,12 +117,7 @@ const MaterialIssues: React.FC = () => {
 
   const fetchMaterialRates = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/purchase-bills', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      const purchaseBills = await response.json();
+      const purchaseBills = await purchaseBillService.getAll();
       
       const rateMap: {[key: string]: number} = {};
       const dateMap: {[key: string]: string} = {};

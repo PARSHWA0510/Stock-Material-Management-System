@@ -6,7 +6,7 @@ import {
   createMaterialIssue,
   deleteMaterialIssue
 } from '../controllers/materialIssuesController';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireRole } from '../middleware/auth';
 
 const router = Router();
 
@@ -35,6 +35,6 @@ router.post('/', [
 ], createMaterialIssue);
 
 // Delete material issue (Admin only)
-router.delete('/:id', deleteMaterialIssue);
+router.delete('/:id', requireRole(['ADMIN']), deleteMaterialIssue);
 
 export default router;

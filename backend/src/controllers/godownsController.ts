@@ -44,13 +44,6 @@ export const updateGodown = async (req: Request<{ id: string }>, res: Response) 
   try {
     const { id } = req.params;
     const { name, address }: UpdateGodownRequest = req.body;
-    const userId = (req as any).user.id;
-    const userRole = (req as any).user.role;
-
-    // Only admin can update godowns
-    if (userRole !== 'ADMIN') {
-      return res.status(403).json({ message: 'Only admin can update godowns' });
-    }
 
     // Check if godown exists
     const existingGodown = await prisma.godown.findUnique({

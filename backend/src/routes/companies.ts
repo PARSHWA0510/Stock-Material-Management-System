@@ -11,8 +11,8 @@ router.use(authenticateToken);
 // Get all companies
 router.get('/', getAllCompanies);
 
-// Create company (Admin only)
-router.post('/', requireRole(['ADMIN']), [
+// Create company (Admin and Storekeeper)
+router.post('/', requireRole(['ADMIN', 'STOREKEEPER']), [
   body('name').notEmpty().trim(),
   body('gstin').optional().trim(),
   body('address').optional().trim(),
@@ -24,8 +24,8 @@ router.post('/', requireRole(['ADMIN']), [
 // Bulk create companies (Admin only)
 router.post('/bulk', requireRole(['ADMIN']), bulkCreateCompanies);
 
-// Update company (Admin only)
-router.put('/:id', requireRole(['ADMIN']), [
+// Update company (Admin and Storekeeper)
+router.put('/:id', requireRole(['ADMIN', 'STOREKEEPER']), [
   body('name').optional().trim(),
   body('gstin').optional().trim(),
   body('address').optional().trim(),

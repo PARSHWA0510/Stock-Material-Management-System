@@ -6,7 +6,7 @@ import {
   createPurchaseBill,
   deletePurchaseBill
 } from '../controllers/purchaseBillsController';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, requireRole } from '../middleware/auth';
 
 const router = Router();
 
@@ -39,6 +39,6 @@ router.post('/', [
 ], createPurchaseBill);
 
 // Delete purchase bill (Admin only)
-router.delete('/:id', deletePurchaseBill);
+router.delete('/:id', requireRole(['ADMIN']), deletePurchaseBill);
 
 export default router;

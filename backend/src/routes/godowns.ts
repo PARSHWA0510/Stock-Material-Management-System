@@ -11,14 +11,14 @@ router.use(authenticateToken);
 // Get all godowns
 router.get('/', getAllGodowns);
 
-// Create godown (Admin only)
-router.post('/', requireRole(['ADMIN']), [
+// Create godown (Admin and Storekeeper)
+router.post('/', requireRole(['ADMIN', 'STOREKEEPER']), [
   body('name').notEmpty().trim(),
   body('address').optional().trim()
 ], createGodown);
 
-// Update godown (Admin only)
-router.put('/:id', requireRole(['ADMIN']), [
+// Update godown (Admin and Storekeeper)
+router.put('/:id', requireRole(['ADMIN', 'STOREKEEPER']), [
   body('name').optional().trim(),
   body('address').optional().trim()
 ], updateGodown);

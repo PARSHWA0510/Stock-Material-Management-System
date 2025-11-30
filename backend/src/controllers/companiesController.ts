@@ -51,13 +51,6 @@ export const updateCompany = async (req: Request<{ id: string }>, res: Response)
   try {
     const { id } = req.params;
     const { name, gstin, address, contactPerson, mobileNumber, emailId }: UpdateCompanyRequest = req.body;
-    const userId = (req as any).user.id;
-    const userRole = (req as any).user.role;
-
-    // Only admin can update companies
-    if (userRole !== 'ADMIN') {
-      return res.status(403).json({ message: 'Only admin can update companies' });
-    }
 
     // Check if company exists
     const existingCompany = await prisma.company.findUnique({

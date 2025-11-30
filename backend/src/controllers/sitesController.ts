@@ -44,13 +44,6 @@ export const updateSite = async (req: Request<{ id: string }>, res: Response) =>
   try {
     const { id } = req.params;
     const { name, address }: UpdateSiteRequest = req.body;
-    const userId = (req as any).user.id;
-    const userRole = (req as any).user.role;
-
-    // Only admin can update sites
-    if (userRole !== 'ADMIN') {
-      return res.status(403).json({ message: 'Only admin can update sites' });
-    }
 
     // Check if site exists
     const existingSite = await prisma.site.findUnique({

@@ -11,14 +11,14 @@ router.use(authenticateToken);
 // Get all sites
 router.get('/', getAllSites);
 
-// Create site (Admin only)
-router.post('/', requireRole(['ADMIN']), [
+// Create site (Admin and Storekeeper)
+router.post('/', requireRole(['ADMIN', 'STOREKEEPER']), [
   body('name').notEmpty().trim(),
   body('address').optional().trim()
 ], createSite);
 
-// Update site (Admin only)
-router.put('/:id', requireRole(['ADMIN']), [
+// Update site (Admin and Storekeeper)
+router.put('/:id', requireRole(['ADMIN', 'STOREKEEPER']), [
   body('name').optional().trim(),
   body('address').optional().trim()
 ], updateSite);

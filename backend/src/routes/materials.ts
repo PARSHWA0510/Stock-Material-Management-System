@@ -21,8 +21,8 @@ router.get('/', getAllMaterials);
 // Get material by ID
 router.get('/:id', getMaterialById);
 
-// Create material (Admin only)
-router.post('/', requireRole(['ADMIN']), [
+// Create material (Admin and Storekeeper)
+router.post('/', requireRole(['ADMIN', 'STOREKEEPER']), [
   body('name').notEmpty().trim(),
   body('unit').notEmpty().trim(),
   body('hsnSac').optional().trim()
@@ -31,8 +31,8 @@ router.post('/', requireRole(['ADMIN']), [
 // Bulk create materials (Admin only)
 router.post('/bulk', requireRole(['ADMIN']), bulkCreateMaterials);
 
-// Update material (Admin only)
-router.put('/:id', requireRole(['ADMIN']), [
+// Update material (Admin and Storekeeper)
+router.put('/:id', requireRole(['ADMIN', 'STOREKEEPER']), [
   body('name').optional().notEmpty().trim(),
   body('unit').optional().notEmpty().trim(),
   body('hsnSac').optional().trim()

@@ -16,6 +16,7 @@ const Sites: React.FC = () => {
 
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
+  const canEdit = user?.role === 'ADMIN' || user?.role === 'STOREKEEPER';
 
   useEffect(() => {
     fetchSites();
@@ -95,7 +96,7 @@ const Sites: React.FC = () => {
     <div>
       <div className="header">
         <h1>Sites</h1>
-        {isAdmin && (
+        {canEdit && (
           <div>
             <button className="btn btn-primary" onClick={handleAddNew}>
               Add Site
@@ -127,7 +128,7 @@ const Sites: React.FC = () => {
               <th>Name</th>
               <th>Address</th>
               <th>Created</th>
-              <th>Actions</th>
+              {canEdit && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -136,23 +137,25 @@ const Sites: React.FC = () => {
                 <td>{site.name}</td>
                 <td>{site.address || '-'}</td>
                 <td>{new Date(site.createdAt).toLocaleDateString()}</td>
-                <td>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ marginRight: '5px' }}
-                    onClick={() => handleEdit(site)}
-                  >
-                    Edit
-                  </button>
-                  {isAdmin && (
+                {canEdit && (
+                  <td>
                     <button 
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(site.id)}
+                      className="btn btn-secondary" 
+                      style={{ marginRight: '5px' }}
+                      onClick={() => handleEdit(site)}
                     >
-                      Delete
+                      Edit
                     </button>
-                  )}
-                </td>
+                    {isAdmin && (
+                      <button 
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(site.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

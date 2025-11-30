@@ -40,6 +40,8 @@ echo "Press Ctrl+C to stop the tunnel"
 echo ""
 
 ssh -i "$PEM_FILE" \
+  -o StrictHostKeyChecking=no \
+  -o UserKnownHostsFile=/dev/null \
   -L ${LOCAL_PORT}:localhost:${REMOTE_PORT} \
   -N \
   ${EC2_USER}@${EC2_IP}

@@ -72,6 +72,8 @@ deploy_backend() {
     
     echo "Transferring to EC2..."
     scp -i "$PEM_FILE" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
         ../backend.tar.gz \
         "${EC2_USER}@${EC2_IP}:/home/${EC2_USER}/"
     

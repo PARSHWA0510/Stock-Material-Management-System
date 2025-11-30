@@ -77,7 +77,10 @@ check_instance_state() {
 stop_docker_container() {
     echo -e "${YELLOW}📦 Stopping Docker container gracefully...${NC}"
     
-    ssh -i "$PEM_FILE" "${EC2_USER}@${EC2_IP}" << 'EOF'
+    ssh -i "$PEM_FILE" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        "${EC2_USER}@${EC2_IP}" << 'EOF'
         # Check if container exists and is running
         if docker ps -a --format '{{.Names}}' | grep -q "^stock-backend$"; then
             if docker ps --format '{{.Names}}' | grep -q "^stock-backend$"; then
@@ -114,7 +117,10 @@ create_backup() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${YELLOW}💾 Creating database backup...${NC}"
         
-        ssh -i "$PEM_FILE" "${EC2_USER}@${EC2_IP}" << 'EOF'
+        ssh -i "$PEM_FILE" \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            "${EC2_USER}@${EC2_IP}" << 'EOF'
             BACKUP_DIR="/data/backups"
             mkdir -p "$BACKUP_DIR"
             DATE=$(date +%Y%m%d_%H%M%S)

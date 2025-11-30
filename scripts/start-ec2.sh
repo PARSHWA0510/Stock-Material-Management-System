@@ -38,27 +38,48 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}🚀 Starting EC2 Instance and Services...${NC}"
 echo ""
 
-# Function to get instance ID from IP
+# Function to get instance ID from IP or by state
 get_instance_id() {
     if [ -z "$INSTANCE_ID" ]; then
-        echo -e "${YELLOW}Finding EC2 instance ID from IP ${EC2_IP}...${NC}"
-        INSTANCE_ID=$(aws ec2 describe-instances \
-            --filters "Name=ip-address,Values=${EC2_IP}" \
-            --query 'Reservations[0].Instances[0].InstanceId' \
-            --output text 2>/dev/null || echo "")
+        echo -e "${YELLOW}Finding EC2 instance ID...${NC}"
         
-        if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" == "None" ]; then
-            # Try by private IP
+        # Try by public IP first (if instance is running)
+        if [ ! -z "$EC2_IP" ]; then
             INSTANCE_ID=$(aws ec2 describe-instances \
-                --filters "Name=private-ip-address,Values=${EC2_IP}" \
+                --filters "Name=ip-address,Values=${EC2_IP}" \
                 --query 'Reservations[0].Instances[0].InstanceId' \
                 --output text 2>/dev/null || echo "")
+        fi
+        
+        # If not found, try by private IP
+        if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" == "None" ]; then
+            if [ ! -z "$EC2_IP" ]; then
+                INSTANCE_ID=$(aws ec2 describe-instances \
+                    --filters "Name=private-ip-address,Values=${EC2_IP}" \
+                    --query 'Reservations[0].Instances[0].InstanceId' \
+                    --output text 2>/dev/null || echo "")
+            fi
+        fi
+        
+        # If still not found and we have EC2_IP, try finding stopped instances that had this IP
+        # (When stopped, instances don't have public IP, so we find by checking all instances)
+        if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" == "None" ]; then
+            # Try to find any instance (stopped or running) - this is a fallback
+            # If you have multiple instances, you should set EC2_INSTANCE_ID in .env
+            ALL_INSTANCES=$(aws ec2 describe-instances \
+                --query 'Reservations[*].Instances[*].[InstanceId,State.Name]' \
+                --output text 2>/dev/null | head -1 | awk '{print $1}' || echo "")
+            if [ ! -z "$ALL_INSTANCES" ] && [ "$ALL_INSTANCES" != "None" ]; then
+                INSTANCE_ID="$ALL_INSTANCES"
+                echo -e "${YELLOW}⚠️  Using first available instance. For accuracy, set EC2_INSTANCE_ID in .env${NC}"
+            fi
         fi
     fi
     
     if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" == "None" ]; then
-        echo -e "${RED}❌ Could not find EC2 instance ID. Please set INSTANCE_ID manually.${NC}"
-        echo "   You can find it in AWS Console or set it in this script."
+        echo -e "${RED}❌ Could not find EC2 instance ID.${NC}"
+        echo "   Please set EC2_INSTANCE_ID in .env file"
+        echo "   You can find it in AWS Console: EC2 → Instances → Instance ID"
         exit 1
     fi
     
@@ -106,7 +127,10 @@ wait_for_ssh() {
 ensure_services_running() {
     echo -e "${YELLOW}🔧 Ensuring services are running...${NC}"
     
-    ssh -i "$PEM_FILE" "${EC2_USER}@${EC2_IP}" << 'EOF'
+    ssh -i "$PEM_FILE" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        "${EC2_USER}@${EC2_IP}" << 'EOF'
         set -e
         
         echo "1. Starting Docker service..."

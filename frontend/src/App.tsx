@@ -20,9 +20,13 @@ import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
+  // Get base path from environment
+  // Default to empty string for localhost development, or '/stock-management' for production
+  const basePath = import.meta.env.VITE_BASE_PATH || (import.meta.env.DEV ? '' : '/stock-management');
+  
   return (
     <AuthProvider>
-      <Router>
+      <Router basename={basePath}>
         <div className="App">
           <Routes>
             <Route path="/login" element={<Login />} />

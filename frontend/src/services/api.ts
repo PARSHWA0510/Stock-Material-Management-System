@@ -26,7 +26,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Default to empty for localhost, or '/stock-management' for production
+      const basePath = import.meta.env.VITE_BASE_PATH || (import.meta.env.DEV ? '' : '/stock-management');
+      window.location.href = `${basePath}/login`;
     }
     return Promise.reject(error);
   }

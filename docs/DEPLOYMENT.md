@@ -49,10 +49,14 @@ aws s3 mb s3://your-bucket-name --region us-east-1
 ### 4. Deploy
 
 ```bash
-./scripts/deploy-frontend-s3.sh
+# Using redeploy script (recommended)
+./scripts/redeploy.sh frontend --subpath stock-management
+
 # Or manually:
-cd frontend && npm run build
-aws s3 sync dist/ s3://your-bucket-name/ --delete --region us-east-1
+cd frontend
+npm install
+npm run build
+# Then sync to S3 manually if needed
 ```
 
 ---
@@ -98,15 +102,14 @@ GRANT ALL PRIVILEGES ON DATABASE stock_management TO stock_user;
 ### 4. Deploy Backend Code
 
 ```bash
-# On local machine
-./scripts/redeploy.sh backend
+# On local machine - fully automated deployment
+./scripts/redeploy.sh backend --update-cors
 
-# On EC2 (after code transfer)
-cd ~
-tar -xzf backend.tar.gz
-docker build -t stock-management-backend:latest .
-docker run -d --name stock-backend --restart unless-stopped \
-  --network host --env-file ~/.env stock-management-backend:latest
+# This script automatically:
+# - Transfers code to EC2
+# - Rebuilds Docker container
+# - Restarts the service
+# - Updates CORS configuration (if --update-cors flag is used)
 ```
 
 ### 5. Run Migrations
@@ -123,20 +126,20 @@ docker exec -it stock-backend npm run db:seed:prod
 ### Frontend Only
 
 ```bash
-./scripts/redeploy.sh frontend
+./scripts/redeploy.sh frontend --subpath stock-management
 ```
 
 ### Backend Only
 
 ```bash
-./scripts/redeploy.sh backend
-# Then SSH to EC2 and rebuild container (see step 4 above)
+./scripts/redeploy.sh backend --update-cors
+# Fully automated - no manual steps needed
 ```
 
 ### Both
 
 ```bash
-./scripts/redeploy.sh all
+./scripts/redeploy.sh all --subpath stock-management --update-cors
 ```
 
 ---

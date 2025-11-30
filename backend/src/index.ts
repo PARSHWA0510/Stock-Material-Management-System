@@ -24,17 +24,50 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(helmet());
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://stock-material-management-system.vercel.app',
-    ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()) : [])
-  ],
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// CORS configuration - CRITICAL: Must return actual origin, not * when credentials: true
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, origin?: string | boolean) => void) {
+    // Allow requests with no origin
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Always allow dharaelectricals.com domains - return the actual origin
+    if (origin.includes('dharaelectricals.com')) {
+      return callback(null, origin);
+    }
+    
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'https://stock-material-management-system.vercel.app',
+      ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((o: string) => o.trim()) : [])
+    ];
+    
+    // Check if in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, origin);
+    }
+    
+    // Default: allow and return the origin
+    return callback(null, origin);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Access-Control-Request-Method', 'Access-Control-Request-Headers'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+// Handle OPTIONS preflight requests
+app.options('*', cors(corsOptions));
+
+app.use(cors(corsOptions));
+
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

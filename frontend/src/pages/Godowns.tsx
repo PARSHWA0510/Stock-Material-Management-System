@@ -96,13 +96,11 @@ const Godowns: React.FC = () => {
     <div>
       <div className="header">
         <h1>Godowns</h1>
-        {isAdmin && (
-          <div>
-            <button className="btn btn-primary" onClick={handleAddNew}>
-              Add Godown
-            </button>
-          </div>
-        )}
+        <div>
+          <button className="btn btn-primary" onClick={handleAddNew}>
+            Add Godown
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -128,7 +126,7 @@ const Godowns: React.FC = () => {
               <th>Name</th>
               <th>Address</th>
               <th>Created At</th>
-              {isAdmin && <th>Actions</th>}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -137,23 +135,23 @@ const Godowns: React.FC = () => {
                 <td>{godown.name}</td>
                 <td>{godown.address || 'N/A'}</td>
                 <td>{new Date(godown.createdAt).toLocaleDateString()}</td>
-                {isAdmin && (
-                  <td>
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ marginRight: '5px' }}
-                      onClick={() => handleEdit(godown)}
-                    >
-                      Edit
-                    </button>
+                <td>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ marginRight: '5px' }}
+                    onClick={() => handleEdit(godown)}
+                  >
+                    Edit
+                  </button>
+                  {isAdmin && (
                     <button 
                       className="btn btn-danger"
                       onClick={() => handleDelete(godown.id)}
                     >
                       Delete
                     </button>
-                  </td>
-                )}
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

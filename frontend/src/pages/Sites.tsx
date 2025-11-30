@@ -127,7 +127,7 @@ const Sites: React.FC = () => {
               <th>Name</th>
               <th>Address</th>
               <th>Created</th>
-              {isAdmin && <th>Actions</th>}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -136,23 +136,23 @@ const Sites: React.FC = () => {
                 <td>{site.name}</td>
                 <td>{site.address || '-'}</td>
                 <td>{new Date(site.createdAt).toLocaleDateString()}</td>
-                {isAdmin && (
-                  <td>
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ marginRight: '5px' }}
-                      onClick={() => handleEdit(site)}
-                    >
-                      Edit
-                    </button>
+                <td>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ marginRight: '5px' }}
+                    onClick={() => handleEdit(site)}
+                  >
+                    Edit
+                  </button>
+                  {isAdmin && (
                     <button 
                       className="btn btn-danger"
                       onClick={() => handleDelete(site.id)}
                     >
                       Delete
                     </button>
-                  </td>
-                )}
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

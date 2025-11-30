@@ -39,7 +39,11 @@ function App() {
               <Route path="purchase-bills" element={<PurchaseBills />} />
               <Route path="material-issues" element={<MaterialIssues />} />
               <Route path="inventory" element={<Inventory />} />
-              <Route path="reports" element={<Reports />} />
+              <Route path="reports" element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Reports />
+                </ProtectedRoute>
+              } />
             </Route>
           </Routes>
         </div>

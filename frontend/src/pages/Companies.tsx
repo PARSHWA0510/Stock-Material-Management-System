@@ -258,13 +258,11 @@ const Companies: React.FC = () => {
     <div>
       <div className="header">
         <h1>Companies</h1>
-        {isAdmin && (
-          <div>
-            <button className="btn btn-primary" onClick={handleAddNew}>
-              Add Company
-            </button>
-          </div>
-        )}
+        <div>
+          <button className="btn btn-primary" onClick={handleAddNew}>
+            Add Company
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -294,7 +292,7 @@ const Companies: React.FC = () => {
               <th>Mobile Number</th>
               <th>Email ID</th>
               <th>Created</th>
-              {isAdmin && <th>Actions</th>}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -307,23 +305,23 @@ const Companies: React.FC = () => {
                 <td>{company.mobileNumber || '-'}</td>
                 <td>{company.emailId || '-'}</td>
                 <td>{new Date(company.createdAt).toLocaleDateString()}</td>
-                {isAdmin && (
-                  <td>
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ marginRight: '5px' }}
-                      onClick={() => handleEdit(company)}
-                    >
-                      Edit
-                    </button>
+                <td>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ marginRight: '5px' }}
+                    onClick={() => handleEdit(company)}
+                  >
+                    Edit
+                  </button>
+                  {isAdmin && (
                     <button 
                       className="btn btn-danger"
                       onClick={() => handleDelete(company.id)}
                     >
                       Delete
                     </button>
-                  </td>
-                )}
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

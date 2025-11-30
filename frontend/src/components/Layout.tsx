@@ -120,14 +120,16 @@ const Layout: React.FC = () => {
               📦 Inventory
             </Link>
           </li>
-          <li>
-            <Link 
-              to="/reports" 
-              className={isActive('/reports') ? 'active' : ''}
-            >
-              📈 Reports
-            </Link>
-          </li>
+          {user?.role === 'ADMIN' && (
+            <li>
+              <Link 
+                to="/reports" 
+                className={isActive('/reports') ? 'active' : ''}
+              >
+                📈 Reports
+              </Link>
+            </li>
+          )}
           <li style={{ marginTop: '20px', borderTop: '1px solid #34495e', paddingTop: '20px' }}>
             <button 
               onClick={logout}

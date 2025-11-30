@@ -249,13 +249,11 @@ const Materials: React.FC = () => {
     <div>
       <div className="header">
         <h1>Materials Master</h1>
-        {isAdmin && (
-          <div>
-            <button className="btn btn-primary" onClick={handleAddNew}>
-              Add Material
-            </button>
-          </div>
-        )}
+        <div>
+          <button className="btn btn-primary" onClick={handleAddNew}>
+            Add Material
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -282,7 +280,7 @@ const Materials: React.FC = () => {
               <th>Unit</th>
               <th>HSN/SAC</th>
               <th>Created</th>
-              {isAdmin && <th>Actions</th>}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -292,23 +290,23 @@ const Materials: React.FC = () => {
                 <td>{material.unit}</td>
                 <td>{material.hsnSac || '-'}</td>
                 <td>{new Date(material.createdAt).toLocaleDateString()}</td>
-                {isAdmin && (
-                  <td>
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ marginRight: '5px' }}
-                      onClick={() => handleEdit(material)}
-                    >
-                      Edit
-                    </button>
+                <td>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ marginRight: '5px' }}
+                    onClick={() => handleEdit(material)}
+                  >
+                    Edit
+                  </button>
+                  {isAdmin && (
                     <button 
                       className="btn btn-danger"
                       onClick={() => handleDelete(material.id)}
                     >
                       Delete
                     </button>
-                  </td>
-                )}
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -22,7 +22,7 @@ S3_REGION="${S3_REGION:-us-east-1}"
 EC2_IP="${EC2_IP:-}"
 EC2_USER="${EC2_USER:-ec2-user}"
 PEM_FILE="${PEM_FILE:-}"
-SUBPATH="${SUBPATH:-stock-management}"
+SUBPATH="${SUBPATH:-}"
 UPDATE_CORS=false
 DEPLOY_TARGET="all"
 
@@ -251,7 +251,7 @@ case "$DEPLOY_TARGET" in
         echo "  all        - Deploy both frontend and backend (default)"
         echo ""
         echo "Options:"
-        echo "  --subpath SUBPATH  - Deploy frontend with subpath (default: stock-management)"
+        echo "  --subpath SUBPATH  - Deploy frontend with subpath (default: empty, for subdomain deployment)"
         echo "  --update-cors      - Update backend CORS configuration"
         exit 1
         ;;

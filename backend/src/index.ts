@@ -43,7 +43,6 @@ const corsOptions = {
     
     const allowedOrigins = [
       'http://localhost:5173',
-      'https://stock-material-management-system.vercel.app',
       ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((o: string) => o.trim()) : [])
     ];
     

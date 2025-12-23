@@ -5,9 +5,9 @@ import react from '@vitejs/plugin-react'
 // Use environment variable for base path, default to empty for all environments
 // For localhost: base is '/' (no subpath needed)
 // For production: base is '/' (no subpath needed, using subdomain instead)
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   // Use root path for all environments (subdomain handles routing)
-  const basePath = process.env.VITE_BASE_PATH || '/';
+  const basePath = '/';
   
   return {
     plugins: [react()],

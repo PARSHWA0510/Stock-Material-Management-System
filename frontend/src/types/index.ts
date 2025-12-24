@@ -73,6 +73,8 @@ export interface PurchaseBillItem {
   quantity: number;
   unit: string;
   rate: number;
+  discountPercent: number;
+  netRate: number;
   gstPercent: number;
   totalExclGst: number;
   totalInclGst: number;
@@ -109,6 +111,8 @@ export interface CreatePurchaseBillRequest {
     quantity: number;
     unit: string;
     rate: number;
+    discountPercent: number;
+    netRate: number;
     gstPercent: number;
     totalExclGst: number;
     totalInclGst: number;
@@ -129,6 +133,8 @@ export interface PurchaseBillFormData {
     quantity: string | number;
     unit: string;
     rate: string | number;
+    discountPercent: number;
+    netRate: number;
     gstPercent: number;
     totalExclGst: number;
     totalInclGst: number;

@@ -122,12 +122,13 @@ const MaterialIssues: React.FC = () => {
       const rateMap: {[key: string]: number} = {};
       const dateMap: {[key: string]: string} = {};
       
-      // Get the most recent rate for each material from purchase bills
-      purchaseBills.forEach((bill: { items?: Array<{ materialId: string; rate: number }>; billDate: string }) => {
+      // Get the most recent net rate (after discount) for each material from purchase bills
+      purchaseBills.forEach((bill: { items?: Array<{ materialId: string; rate: number; netRate?: number }>; billDate: string }) => {
         if (bill.items && Array.isArray(bill.items)) {
-          bill.items.forEach((item: { materialId: string; rate: number }) => {
-            if (item.materialId && item.rate !== undefined) {
-              const itemRate = Number(item.rate);
+          bill.items.forEach((item: { materialId: string; rate: number; netRate?: number }) => {
+            if (item.materialId) {
+              // Use netRate if available (after discount), otherwise fall back to rate
+              const itemRate = Number(item.netRate !== undefined ? item.netRate : item.rate);
               const billDate = new Date(bill.billDate);
               const existingDate = dateMap[item.materialId] ? new Date(dateMap[item.materialId]) : new Date(0);
               
@@ -141,7 +142,7 @@ const MaterialIssues: React.FC = () => {
       });
       
       setMaterialRates(rateMap);
-      console.log('Fetched material rates:', rateMap);
+      console.log('Fetched material rates (using netRate):', rateMap);
     } catch (error) {
       console.error('Failed to fetch material rates:', error);
     }
@@ -272,7 +273,7 @@ const MaterialIssues: React.FC = () => {
     
     setFormData(prevFormData => ({
       ...prevFormData,
-      items: [...prevFormData.items, newItem]
+      items: [newItem, ...prevFormData.items]
     }));
     
     // Refresh stock data when adding new items
@@ -449,21 +450,22 @@ const MaterialIssues: React.FC = () => {
                 <td>₹{getTotalAmount(issue).toLocaleString()}</td>
                 <td>{issue.createdBy.name}</td>
                 <td>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ marginRight: '5px' }}
-                    onClick={() => handleView(issue)}
-                  >
-                    View
-                  </button>
-                  {isAdmin && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button 
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(issue.id)}
+                      className="btn btn-secondary" 
+                      onClick={() => handleView(issue)}
                     >
-                      Delete
+                      View
                     </button>
-                  )}
+                    {isAdmin && (
+                      <button 
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(issue.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -554,7 +556,7 @@ const MaterialIssues: React.FC = () => {
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <h4>Items</h4>
-                  <button type="button" className="btn btn-secondary" onClick={addItem}>
+                  <button type="button" className="btn btn-primary" onClick={addItem}>
                     Add Item
                   </button>
                 </div>

@@ -139,12 +139,23 @@ const PurchaseBills: React.FC = () => {
       // Convert string values to numbers for submission
       const submitData = {
         ...formData,
-        items: formData.items.map(item => ({
-          ...item,
-          quantity: parseFloat(item.quantity.toString()) || 0,
-          rate: parseFloat(item.rate.toString()) || 0,
-          gstPercent: parseFloat(item.gstPercent.toString()) || 0
-        }))
+        items: formData.items.map(item => {
+          const rate = parseFloat(item.rate.toString()) || 0;
+          const discountPercent = parseFloat(item.discountPercent?.toString() || '0') || 0;
+          // Calculate netRate if not already set or if it's 0
+          const netRate = item.netRate && item.netRate > 0 
+            ? parseFloat(item.netRate.toString()) 
+            : rate - (rate * discountPercent / 100);
+          
+          return {
+            ...item,
+            quantity: parseFloat(item.quantity.toString()) || 0,
+            rate,
+            discountPercent,
+            netRate,
+            gstPercent: parseFloat(item.gstPercent.toString()) || 0
+          };
+        })
       };
 
       await purchaseBillService.create(submitData);
@@ -190,6 +201,8 @@ const PurchaseBills: React.FC = () => {
       quantity: '',
       unit: '',
       rate: '',
+      discountPercent: 0,
+      netRate: 0,
       gstPercent: 18,
       totalExclGst: 0,
       totalInclGst: 0
@@ -197,7 +210,7 @@ const PurchaseBills: React.FC = () => {
     
     setFormData(prevFormData => ({
       ...prevFormData,
-      items: [...prevFormData.items, newItem]
+      items: [newItem, ...prevFormData.items]
     }));
   };
 
@@ -206,13 +219,22 @@ const PurchaseBills: React.FC = () => {
       const newItems = [...prevFormData.items];
       newItems[index] = { ...newItems[index], [field]: value };
       
-      // Calculate totals
-      if (field === 'quantity' || field === 'rate' || field === 'gstPercent') {
-        const quantity = parseFloat(newItems[index].quantity.toString()) || 0;
+      // Calculate net rate and totals
+      if (field === 'rate' || field === 'discountPercent') {
         const rate = parseFloat(newItems[index].rate.toString()) || 0;
+        const discountPercent = parseFloat(newItems[index].discountPercent.toString()) || 0;
+        
+        // Calculate net rate: rate - (rate * discountPercent / 100)
+        newItems[index].netRate = rate - (rate * discountPercent / 100);
+      }
+      
+      // Calculate totals using net rate
+      if (field === 'quantity' || field === 'rate' || field === 'discountPercent' || field === 'gstPercent') {
+        const quantity = parseFloat(newItems[index].quantity.toString()) || 0;
+        const netRate = parseFloat(newItems[index].netRate.toString()) || 0;
         const gstPercent = parseFloat(newItems[index].gstPercent.toString()) || 0;
         
-        newItems[index].totalExclGst = quantity * rate;
+        newItems[index].totalExclGst = quantity * netRate;
         newItems[index].totalInclGst = newItems[index].totalExclGst * (1 + gstPercent / 100);
       }
       
@@ -230,6 +252,17 @@ const PurchaseBills: React.FC = () => {
     const numValue = parseFloat(value) || 0;
     if (numValue < 0) return; // Prevent negative values
     updateItem(index, 'rate', value);
+  };
+
+  const handleDiscountChange = (index: number, value: string) => {
+    // If empty string, treat as 0
+    if (value === '' || value === null || value === undefined) {
+      updateItem(index, 'discountPercent', 0);
+      return;
+    }
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue < 0 || numValue > 100) return; // Prevent invalid, negative values or values over 100%
+    updateItem(index, 'discountPercent', numValue);
   };
 
   const handleGstChange = (index: number, value: string) => {
@@ -381,21 +414,22 @@ const PurchaseBills: React.FC = () => {
                 <td>₹{getTotalAmount(bill).toLocaleString()}</td>
                 <td>{bill.createdBy.name}</td>
                 <td>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ marginRight: '5px' }}
-                    onClick={() => handleView(bill)}
-                  >
-                    View
-                  </button>
-                  {isAdmin && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button 
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(bill.id)}
+                      className="btn btn-secondary" 
+                      onClick={() => handleView(bill)}
                     >
-                      Delete
+                      View
                     </button>
-                  )}
+                    {isAdmin && (
+                      <button 
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(bill.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -508,7 +542,7 @@ const PurchaseBills: React.FC = () => {
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <h4>Items</h4>
-                  <button type="button" className="btn btn-secondary" onClick={addItem}>
+                  <button type="button" className="btn btn-primary" onClick={addItem}>
                     Add Item
                   </button>
                 </div>
@@ -576,6 +610,29 @@ const PurchaseBills: React.FC = () => {
                         />
                       </div>
                       <div className="form-group">
+                        <label className="form-label">Discount %</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={item.discountPercent && item.discountPercent !== 0 ? item.discountPercent : ''}
+                          onChange={(e) => handleDiscountChange(index, e.target.value)}
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Net Rate</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={item.netRate ? item.netRate.toFixed(2) : '0.00'}
+                          readOnly
+                          style={{ backgroundColor: '#f5f5f5' }}
+                        />
+                      </div>
+                      <div className="form-group">
                         <label className="form-label">GST %</label>
                         <input
                           type="number"
@@ -594,6 +651,7 @@ const PurchaseBills: React.FC = () => {
                           className="form-input"
                           value={item.totalExclGst.toFixed(2)}
                           readOnly
+                          style={{ backgroundColor: '#f5f5f5' }}
                         />
                       </div>
                       <div className="form-group">
@@ -603,6 +661,7 @@ const PurchaseBills: React.FC = () => {
                           className="form-input"
                           value={item.totalInclGst.toFixed(2)}
                           readOnly
+                          style={{ backgroundColor: '#f5f5f5' }}
                         />
                       </div>
                     </div>
@@ -703,6 +762,8 @@ const PurchaseBills: React.FC = () => {
                     <th>Quantity</th>
                     <th>Unit</th>
                     <th>Rate</th>
+                    <th>Discount %</th>
+                    <th>Net Rate</th>
                     <th>GST %</th>
                     <th>Total (Excl. GST)</th>
                     <th>Total (Incl. GST)</th>
@@ -714,10 +775,12 @@ const PurchaseBills: React.FC = () => {
                       <td>{item.material.name}</td>
                       <td>{item.quantity}</td>
                       <td>{item.unit}</td>
-                      <td>₹{item.rate.toLocaleString()}</td>
+                      <td>₹{Number(item.rate).toLocaleString()}</td>
+                      <td>{item.discountPercent || 0}%</td>
+                      <td>₹{Number(item.netRate || item.rate).toLocaleString()}</td>
                       <td>{item.gstPercent}%</td>
-                      <td>₹{item.totalExclGst.toLocaleString()}</td>
-                      <td>₹{item.totalInclGst.toLocaleString()}</td>
+                      <td>₹{Number(item.totalExclGst).toLocaleString()}</td>
+                      <td>₹{Number(item.totalInclGst).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>

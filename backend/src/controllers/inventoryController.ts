@@ -47,10 +47,16 @@ export const getInventory = async (req: Request, res: Response) => {
 
       if (tx.txType === 'IN') {
         stockLevels[key].quantity += Number(tx.quantity);
-        stockLevels[key].totalValue += Number(tx.quantity) * Number(tx.rate);
+        // Calculate value with GST: quantity * rate * (1 + gstPercent / 100)
+        const gstPercent = Number(tx.gstPercent || 0);
+        const valueWithGst = Number(tx.quantity) * Number(tx.rate) * (1 + gstPercent / 100);
+        stockLevels[key].totalValue += valueWithGst;
       } else {
         stockLevels[key].quantity -= Number(tx.quantity);
-        stockLevels[key].totalValue -= Number(tx.quantity) * Number(tx.rate);
+        // Calculate value with GST: quantity * rate * (1 + gstPercent / 100)
+        const gstPercent = Number(tx.gstPercent || 0);
+        const valueWithGst = Number(tx.quantity) * Number(tx.rate) * (1 + gstPercent / 100);
+        stockLevels[key].totalValue -= valueWithGst;
       }
 
       if (tx.createdAt > stockLevels[key].lastUpdated) {

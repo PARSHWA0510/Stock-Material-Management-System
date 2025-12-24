@@ -53,8 +53,11 @@ export const getSiteMaterialReports = async (req: Request, res: Response) => {
           }
 
           const quantity = Number(item.quantity);
+          // Material issue items already have the correct rate (netRate was used when creating the issue)
           const rate = Number(item.rate);
-          const totalValue = quantity * rate;
+          const gstPercent = Number(item.gstPercent || 0);
+          // Calculate total value with GST
+          const totalValue = quantity * rate * (1 + gstPercent / 100);
 
           materialSummary[materialId].totalQuantity += quantity;
           materialSummary[materialId].totalValue += totalValue;
@@ -102,8 +105,11 @@ export const getSiteMaterialReports = async (req: Request, res: Response) => {
           }
 
           const quantity = Number(item.quantity);
-          const rate = Number(item.rate);
-          const totalValue = quantity * rate;
+          // Use netRate (after discount) instead of rate
+          const rate = Number(item.netRate || item.rate);
+          const gstPercent = Number(item.gstPercent || 0);
+          // Calculate total value with GST
+          const totalValue = quantity * rate * (1 + gstPercent / 100);
 
           materialSummary[materialId].totalQuantity += quantity;
           materialSummary[materialId].totalValue += totalValue;
@@ -174,8 +180,11 @@ export const getSiteMaterialReports = async (req: Request, res: Response) => {
           }
 
           const quantity = Number(item.quantity);
+          // Material issue items already have the correct rate (netRate was used when creating the issue)
           const rate = Number(item.rate);
-          const totalValue = quantity * rate;
+          const gstPercent = Number(item.gstPercent || 0);
+          // Calculate total value with GST
+          const totalValue = quantity * rate * (1 + gstPercent / 100);
 
           materialSummary[materialId].totalQuantity += quantity;
           materialSummary[materialId].totalValue += totalValue;
@@ -214,8 +223,11 @@ export const getSiteMaterialReports = async (req: Request, res: Response) => {
           }
 
           const quantity = Number(item.quantity);
-          const rate = Number(item.rate);
-          const totalValue = quantity * rate;
+          // Use netRate (after discount) instead of rate
+          const rate = Number(item.netRate || item.rate);
+          const gstPercent = Number(item.gstPercent || 0);
+          // Calculate total value with GST
+          const totalValue = quantity * rate * (1 + gstPercent / 100);
 
           materialSummary[materialId].totalQuantity += quantity;
           materialSummary[materialId].totalValue += totalValue;
@@ -327,12 +339,18 @@ export const getSiteMaterialHistory = async (req: Request, res: Response) => {
     // Process material issues
     for (const issue of materialIssues) {
       for (const item of issue.items) {
+        // Material issue items already have the correct rate (netRate was used when creating the issue)
+        const quantity = Number(item.quantity);
+        const rate = Number(item.rate);
+        const gstPercent = Number(item.gstPercent || 0);
+        // Calculate total value with GST
+        const totalValue = quantity * rate * (1 + gstPercent / 100);
         history.push({
           type: 'ISSUE',
           date: issue.issueDate,
-          quantity: Number(item.quantity),
-          rate: Number(item.rate),
-          totalValue: Number(item.quantity) * Number(item.rate),
+          quantity,
+          rate,
+          totalValue,
           fromGodown: issue.fromGodown?.name || 'Direct',
           reference: `Issue #${issue.identifier}`,
           issueId: issue.id
@@ -343,12 +361,17 @@ export const getSiteMaterialHistory = async (req: Request, res: Response) => {
     // Process direct purchases
     for (const purchase of directPurchases) {
       for (const item of purchase.items) {
+        const quantity = Number(item.quantity);
+        const rate = Number(item.netRate || item.rate);
+        const gstPercent = Number(item.gstPercent || 0);
+        // Calculate total value with GST
+        const totalValue = quantity * rate * (1 + gstPercent / 100);
         history.push({
           type: 'DIRECT_PURCHASE',
           date: purchase.billDate,
-          quantity: Number(item.quantity),
-          rate: Number(item.rate),
-          totalValue: Number(item.quantity) * Number(item.rate),
+          quantity,
+          rate,
+          totalValue,
           fromGodown: 'Direct Purchase',
           reference: `Bill #${purchase.invoiceNumber}`,
           company: purchase.company.name,
@@ -453,11 +476,15 @@ export const getMaterialWiseReports = async (req: Request, res: Response) => {
         for (const item of bill.items) {
           const quantity = Number(item.quantity);
           totalAdded += quantity;
+          const rate = Number(item.netRate || item.rate);
+          const gstPercent = Number(item.gstPercent || 0);
+          // Calculate total value with GST
+          const totalValue = quantity * rate * (1 + gstPercent / 100);
           additions.push({
             date: bill.billDate,
             quantity,
-            rate: Number(item.rate),
-            totalValue: quantity * Number(item.rate),
+            rate,
+            totalValue,
             invoiceNumber: bill.invoiceNumber,
             company: bill.company.name,
             deliveredTo: bill.deliveredToType === 'GODOWN' ? 'Godown' : 'Site',
@@ -473,8 +500,11 @@ export const getMaterialWiseReports = async (req: Request, res: Response) => {
       for (const issue of materialIssues) {
         for (const item of issue.items) {
           const quantity = Number(item.quantity);
+          // Material issue items already have the correct rate (netRate was used when creating the issue)
           const rate = Number(item.rate);
-          const totalValue = quantity * rate;
+          const gstPercent = Number(item.gstPercent || 0);
+          // Calculate total value with GST
+          const totalValue = quantity * rate * (1 + gstPercent / 100);
           totalDistributed += quantity;
 
           if (!siteDistribution[issue.siteId]) {

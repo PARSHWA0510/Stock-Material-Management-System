@@ -128,6 +128,8 @@ export const createPurchaseBill = async (req: Request<{}, any, CreatePurchaseBil
             quantity: item.quantity,
             unit: item.unit,
             rate: item.rate,
+            discountPercent: item.discountPercent || 0,
+            netRate: item.netRate || item.rate,
             gstPercent: item.gstPercent,
             totalExclGst: item.totalExclGst,
             totalInclGst: item.totalInclGst,
@@ -150,6 +152,19 @@ export const createPurchaseBill = async (req: Request<{}, any, CreatePurchaseBil
 
     // Create stock transactions
     for (const item of items) {
+      // Use netRate (after discount) for stock transactions
+      // If netRate is 0 or not provided, calculate it from rate and discountPercent
+      let transactionRate = item.netRate;
+      if (!transactionRate || transactionRate === 0) {
+        const rate = Number(item.rate);
+        const discountPercent = Number(item.discountPercent || 0);
+        transactionRate = rate - (rate * discountPercent / 100);
+      }
+      // Fallback to rate if calculation fails
+      if (!transactionRate || transactionRate <= 0) {
+        transactionRate = item.rate;
+      }
+      
       // IN transaction
       await prisma.stockTransaction.create({
         data: {
@@ -160,7 +175,8 @@ export const createPurchaseBill = async (req: Request<{}, any, CreatePurchaseBil
           referenceTable: 'purchase_bills',
           referenceId: purchaseBill.id,
           quantity: item.quantity,
-          rate: item.rate,
+          rate: transactionRate,
+          gstPercent: item.gstPercent || 18,
           balanceAfter: 0, // Will be calculated by a service
           txDate: new Date(billDate)
         }
@@ -177,7 +193,8 @@ export const createPurchaseBill = async (req: Request<{}, any, CreatePurchaseBil
             referenceTable: 'purchase_bills',
             referenceId: purchaseBill.id,
             quantity: item.quantity,
-            rate: item.rate,
+            rate: transactionRate,
+            gstPercent: item.gstPercent || 18,
             balanceAfter: 0, // Will be calculated by a service
             txDate: new Date(billDate)
           }

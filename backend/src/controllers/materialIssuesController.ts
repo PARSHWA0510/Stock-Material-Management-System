@@ -189,6 +189,7 @@ export const createMaterialIssue = async (req: Request<{}, any, CreateMaterialIs
           referenceId: materialIssue.id,
           quantity: item.quantity,
           rate: item.rate,
+          gstPercent: item.gstPercent || 18,
           balanceAfter: 0, // Will be calculated by a service
           txDate: new Date(issueDate)
         }

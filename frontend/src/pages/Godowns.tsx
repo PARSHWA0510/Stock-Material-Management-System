@@ -136,21 +136,22 @@ const Godowns: React.FC = () => {
                 <td>{godown.address || 'N/A'}</td>
                 <td>{new Date(godown.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ marginRight: '5px' }}
-                    onClick={() => handleEdit(godown)}
-                  >
-                    Edit
-                  </button>
-                  {isAdmin && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button 
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(godown.id)}
+                      className="btn btn-secondary" 
+                      onClick={() => handleEdit(godown)}
                     >
-                      Delete
+                      Edit
                     </button>
-                  )}
+                    {isAdmin && (
+                      <button 
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(godown.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

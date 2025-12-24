@@ -291,21 +291,22 @@ const Materials: React.FC = () => {
                 <td>{material.hsnSac || '-'}</td>
                 <td>{new Date(material.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ marginRight: '5px' }}
-                    onClick={() => handleEdit(material)}
-                  >
-                    Edit
-                  </button>
-                  {isAdmin && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button 
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(material.id)}
+                      className="btn btn-secondary" 
+                      onClick={() => handleEdit(material)}
                     >
-                      Delete
+                      Edit
                     </button>
-                  )}
+                    {isAdmin && (
+                      <button 
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(material.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

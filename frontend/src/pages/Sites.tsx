@@ -139,21 +139,22 @@ const Sites: React.FC = () => {
                 <td>{new Date(site.createdAt).toLocaleDateString()}</td>
                 {canEdit && (
                   <td>
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ marginRight: '5px' }}
-                      onClick={() => handleEdit(site)}
-                    >
-                      Edit
-                    </button>
-                    {isAdmin && (
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                       <button 
-                        className="btn btn-danger"
-                        onClick={() => handleDelete(site.id)}
+                        className="btn btn-secondary" 
+                        onClick={() => handleEdit(site)}
                       >
-                        Delete
+                        Edit
                       </button>
-                    )}
+                      {isAdmin && (
+                        <button 
+                          className="btn btn-danger"
+                          onClick={() => handleDelete(site.id)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </td>
                 )}
               </tr>

@@ -306,21 +306,22 @@ const Companies: React.FC = () => {
                 <td>{company.emailId || '-'}</td>
                 <td>{new Date(company.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ marginRight: '5px' }}
-                    onClick={() => handleEdit(company)}
-                  >
-                    Edit
-                  </button>
-                  {isAdmin && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button 
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(company.id)}
+                      className="btn btn-secondary" 
+                      onClick={() => handleEdit(company)}
                     >
-                      Delete
+                      Edit
                     </button>
-                  )}
+                    {isAdmin && (
+                      <button 
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(company.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -348,143 +349,148 @@ const Companies: React.FC = () => {
             padding: '20px',
             borderRadius: '8px',
             width: '400px',
-            maxWidth: '90%'
+            maxWidth: '90%',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
-            <h3>{editingCompany ? 'Edit Company' : 'Add Company'}</h3>
-            {!editingCompany && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f0f8ff', borderRadius: '4px', border: '1px solid #4a90e2' }}>
-                <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>
-                  Upload Excel File (Optional)
-                </label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleExcelFileSelect}
-                  disabled={uploading}
-                  style={{ marginBottom: '10px', width: '100%' }}
-                />
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-                  Excel format: Columns should be "Name", "GSTIN" (optional), "Address" (optional), "Contact Person" (optional), "Mobile Number" (optional), "Email ID" (optional)
-                </div>
-                
-                {showPreview && parsedCompanies.length > 0 && (
-                  <div style={{ marginTop: '15px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                      <strong style={{ color: '#28a745' }}>✓ {parsedCompanies.length} companies parsed successfully</strong>
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={() => setShowPreviewModal(true)}
-                        style={{ padding: '6px 12px', fontSize: '14px' }}
-                      >
-                        View Preview
-                      </button>
+            <h3 style={{ marginBottom: '20px', flexShrink: 0 }}>{editingCompany ? 'Edit Company' : 'Add Company'}</h3>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '5px' }}>
+                {!editingCompany && (
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f0f8ff', borderRadius: '4px', border: '1px solid #4a90e2' }}>
+                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>
+                      Upload Excel File (Optional)
+                    </label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleExcelFileSelect}
+                      disabled={uploading}
+                      style={{ marginBottom: '10px', width: '100%' }}
+                    />
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+                      Excel format: Columns should be "Name", "GSTIN" (optional), "Address" (optional), "Contact Person" (optional), "Mobile Number" (optional), "Email ID" (optional)
                     </div>
-                  </div>
-                )}
+                    
+                    {showPreview && parsedCompanies.length > 0 && (
+                      <div style={{ marginTop: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                          <strong style={{ color: '#28a745' }}>✓ {parsedCompanies.length} companies parsed successfully</strong>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() => setShowPreviewModal(true)}
+                            style={{ padding: '6px 12px', fontSize: '14px' }}
+                          >
+                            View Preview
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
-                {uploadResults && (
-                  <div style={{ marginTop: '15px', padding: '10px', backgroundColor: uploadResults.results.errors.length > 0 ? '#fff3cd' : '#d4edda', borderRadius: '4px', border: `1px solid ${uploadResults.results.errors.length > 0 ? '#ffc107' : '#28a745'}` }}>
-                    <strong style={{ display: 'block', marginBottom: '8px' }}>Upload Results:</strong>
-                    <div style={{ fontSize: '12px' }}>
-                      <div style={{ color: '#28a745' }}>✓ Created: {uploadResults.results.created.length}</div>
-                      {uploadResults.results.skipped.length > 0 && (
-                        <div style={{ color: '#ffc107', marginTop: '4px' }}>
-                          ⚠ Skipped: {uploadResults.results.skipped.length}
-                          <ul style={{ margin: '4px 0 0 20px', padding: 0 }}>
-                            {uploadResults.results.skipped.map((item, idx) => (
-                              <li key={idx}>{item.name}: {item.reason}</li>
-                            ))}
-                          </ul>
+                    {uploadResults && (
+                      <div style={{ marginTop: '15px', padding: '10px', backgroundColor: uploadResults.results.errors.length > 0 ? '#fff3cd' : '#d4edda', borderRadius: '4px', border: `1px solid ${uploadResults.results.errors.length > 0 ? '#ffc107' : '#28a745'}` }}>
+                        <strong style={{ display: 'block', marginBottom: '8px' }}>Upload Results:</strong>
+                        <div style={{ fontSize: '12px' }}>
+                          <div style={{ color: '#28a745' }}>✓ Created: {uploadResults.results.created.length}</div>
+                          {uploadResults.results.skipped.length > 0 && (
+                            <div style={{ color: '#ffc107', marginTop: '4px' }}>
+                              ⚠ Skipped: {uploadResults.results.skipped.length}
+                              <ul style={{ margin: '4px 0 0 20px', padding: 0 }}>
+                                {uploadResults.results.skipped.map((item, idx) => (
+                                  <li key={idx}>{item.name}: {item.reason}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {uploadResults.results.errors.length > 0 && (
+                            <div style={{ color: '#dc3545', marginTop: '4px' }}>
+                              ✗ Errors: {uploadResults.results.errors.length}
+                              <ul style={{ margin: '4px 0 0 20px', padding: 0 }}>
+                                {uploadResults.results.errors.map((item, idx) => (
+                                  <li key={idx}>{item.name}: {item.error}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {uploadResults.results.errors.length > 0 && (
-                        <div style={{ color: '#dc3545', marginTop: '4px' }}>
-                          ✗ Errors: {uploadResults.results.errors.length}
-                          <ul style={{ margin: '4px 0 0 20px', padding: 0 }}>
-                            {uploadResults.results.errors.map((item, idx) => (
-                              <li key={idx}>{item.name}: {item.error}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {parsedCompanies.length === 0 && (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Name</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">GSTIN</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.gstin}
+                        onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Address</label>
+                      <textarea
+                        className="form-input"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Contact Person</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.contactPerson}
+                        onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Mobile Number</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.mobileNumber}
+                        onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Email ID</label>
+                      <input
+                        type="email"
+                        className="form-input"
+                        value={formData.emailId}
+                        onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
+                {parsedCompanies.length > 0 && (
+                  <div style={{ padding: '15px', backgroundColor: '#e7f3ff', borderRadius: '4px', marginBottom: '20px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', color: '#0066cc' }}>
+                      ✓ {parsedCompanies.length} companies ready to upload from Excel file
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                      Manual entry fields are hidden. Click "Add {parsedCompanies.length} Companies" to upload.
                     </div>
                   </div>
                 )}
               </div>
-            )}
-            <form onSubmit={handleSubmit}>
-              {parsedCompanies.length === 0 && (
-                <>
-              <div className="form-group">
-                <label className="form-label">Name</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">GSTIN</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={formData.gstin}
-                  onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Address</label>
-                <textarea
-                  className="form-input"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  rows={3}
-                />
-              </div>
-                  <div className="form-group">
-                    <label className="form-label">Contact Person</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.contactPerson}
-                      onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Mobile Number</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.mobileNumber}
-                      onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Email ID</label>
-                    <input
-                      type="email"
-                      className="form-input"
-                      value={formData.emailId}
-                      onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
-              {parsedCompanies.length > 0 && (
-                <div style={{ padding: '15px', backgroundColor: '#e7f3ff', borderRadius: '4px', marginBottom: '20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '14px', color: '#0066cc' }}>
-                    ✓ {parsedCompanies.length} companies ready to upload from Excel file
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                    Manual entry fields are hidden. Click "Add {parsedCompanies.length} Companies" to upload.
-                  </div>
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px', flexShrink: 0, paddingTop: '20px', borderTop: '1px solid #eee' }}>
                 <button 
                   type="button" 
                   className="btn btn-secondary"

@@ -114,6 +114,8 @@ model PurchaseBillItem {
   quantity       Decimal
   unit           String
   rate           Decimal
+  discountPercent Decimal @default(0) @map("discount_percent")
+  netRate        Decimal @map("net_rate")
   gstPercent     Decimal @map("gst_percent")
   totalExclGst   Decimal @map("total_excl_gst")
   totalInclGst   Decimal @map("total_incl_gst")
@@ -177,6 +179,7 @@ model StockTransaction {
   referenceId   String      @map("reference_id")
   quantity      Decimal
   rate          Decimal
+  gstPercent    Decimal     @default(18) @map("gst_percent")
   balanceAfter  Decimal     @map("balance_after")
   txDate        DateTime    @map("tx_date")
   createdAt     DateTime    @default(now()) @map("created_at")

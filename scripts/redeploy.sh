@@ -190,9 +190,19 @@ deploy_backend() {
         "${EC2_USER}@${EC2_IP}" << 'EOF'
         set -e
         
-        # Extract updated code
+        # Extract updated code to a clean directory
         cd /tmp
-        tar -xzf backend-update.tar.gz
+        rm -rf backend-update
+        mkdir -p backend-update
+        cd backend-update
+        # Extract with options to ignore macOS extended attributes
+        tar -xzf ../backend-update.tar.gz --no-same-owner --no-same-permissions 2>&1 | grep -v "LIBARCHIVE.xattr" | grep -v "Cannot utime" | grep -v "Cannot change mode" || true
+        
+        # Verify extraction succeeded
+        if [ ! -f "package.json" ] || [ ! -d "prisma" ]; then
+            echo "❌ Extraction failed - key files missing"
+            exit 1
+        fi
         
         # Rebuild Docker image
         echo "Rebuilding Docker image..."
@@ -217,7 +227,7 @@ deploy_backend() {
         echo "✅ Backend updated and restarted"
         
         # Cleanup
-        rm -rf /tmp/backend-update.tar.gz /tmp/src /tmp/package.json /tmp/tsconfig.json /tmp/Dockerfile /tmp/prisma 2>/dev/null || true
+        rm -rf /tmp/backend-update.tar.gz /tmp/backend-update 2>/dev/null || true
 EOF
     
     rm -f /tmp/backend-update.tar.gz

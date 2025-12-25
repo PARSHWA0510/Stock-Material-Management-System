@@ -31,6 +31,8 @@ async function addMoreTestData() {
             quantity: 200,
             unit: 'bag',
             rate: 450,
+            discountPercent: 0,
+            netRate: 450,
             gstPercent: 18,
             totalExclGst: 90000,
             totalInclGst: 106200
@@ -40,6 +42,8 @@ async function addMoreTestData() {
             quantity: 100,
             unit: 'meter',
             rate: 85,
+            discountPercent: 0,
+            netRate: 85,
             gstPercent: 18,
             totalExclGst: 8500,
             totalInclGst: 10030
@@ -60,6 +64,8 @@ async function addMoreTestData() {
             quantity: 500,
             unit: 'meter',
             rate: 30,
+            discountPercent: 0,
+            netRate: 30,
             gstPercent: 18,
             totalExclGst: 15000,
             totalInclGst: 17700
@@ -80,6 +86,8 @@ async function addMoreTestData() {
             quantity: 150,
             unit: 'bag',
             rate: 420,
+            discountPercent: 0,
+            netRate: 420,
             gstPercent: 18,
             totalExclGst: 63000,
             totalInclGst: 74340
@@ -89,6 +97,8 @@ async function addMoreTestData() {
             quantity: 200,
             unit: 'meter',
             rate: 90,
+            discountPercent: 0,
+            netRate: 90,
             gstPercent: 18,
             totalExclGst: 18000,
             totalInclGst: 21240
@@ -124,7 +134,8 @@ async function addMoreTestData() {
               referenceTable: 'purchase_bills',
               referenceId: bill.id,
               quantity: item.quantity,
-              rate: item.rate,
+              rate: item.netRate || item.rate,
+              gstPercent: item.gstPercent || 18,
               balanceAfter: 0, // Will be calculated properly in real scenario
               txDate: billData.billDate
             }

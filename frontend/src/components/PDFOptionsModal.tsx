@@ -6,6 +6,13 @@ import {
   generateSiteWisePDF,
   generateGodownInventoryPDF
 } from '../utils/pdfGenerator';
+import {
+  generateMaterialWiseOverviewExcel,
+  generateMaterialWiseSitesOverviewExcel,
+  generateMaterialWiseSiteDetailsExcel,
+  generateSiteWiseExcel,
+  generateGodownInventoryExcel
+} from '../utils/excelGenerator';
 import { reportsService } from '../services/reportsService';
 
 // Component for selecting site when material is selected
@@ -82,6 +89,7 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
   sites: _sites = []
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>('');
+  const [selectedFormat, setSelectedFormat] = useState<'pdf' | 'excel' | ''>('');
   const [selectedSite, setSelectedSite] = useState<string>('');
   const [selectedGodown, setSelectedGodown] = useState<string>('');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('');
@@ -90,6 +98,7 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setSelectedOption('');
+      setSelectedFormat('');
       setSelectedSite('');
       setSelectedGodown('');
       setSelectedMaterial('');
@@ -99,6 +108,18 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
   if (!isOpen) return null;
 
   const handleDownload = async () => {
+    // Validate format is selected
+    if (!selectedFormat || (selectedFormat !== 'pdf' && selectedFormat !== 'excel')) {
+      alert('Please select a format (PDF or Excel)');
+      return;
+    }
+
+    // Validate report type is selected
+    if (!selectedOption) {
+      alert('Please select a report type');
+      return;
+    }
+
     try {
       if (type === 'reports') {
         // Reports type - handle all report options
@@ -117,83 +138,182 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
         
         if (selectedOption === 'all-materials-overview') {
           const materialData = { materialReports: materialReportsArray };
-          generateMaterialWiseOverviewPDF(materialData);
+          if (selectedFormat === 'pdf') {
+            generateMaterialWiseOverviewPDF(materialData);
+          } else if (selectedFormat === 'excel') {
+            generateMaterialWiseOverviewExcel(materialData);
+          }
         } else if (selectedOption === 'material-sites-overview') {
           if (materialName) {
             // Already viewing a specific material
-            generateMaterialWiseSitesOverviewPDF(data.selectedMaterialReport || data);
+            if (selectedFormat === 'pdf') {
+              generateMaterialWiseSitesOverviewPDF(data.selectedMaterialReport || data);
+            } else if (selectedFormat === 'excel') {
+              generateMaterialWiseSitesOverviewExcel(data.selectedMaterialReport || data);
+            }
           } else if (selectedMaterial) {
             // Need to fetch material details
             const materialData = await reportsService.getMaterialWiseReports(selectedMaterial);
-            generateMaterialWiseSitesOverviewPDF(materialData);
+            if (selectedFormat === 'pdf') {
+              generateMaterialWiseSitesOverviewPDF(materialData);
+            } else if (selectedFormat === 'excel') {
+              generateMaterialWiseSitesOverviewExcel(materialData);
+            }
           }
         } else if (selectedOption === 'material-site-details') {
           if (materialName && selectedSite) {
             // Already viewing a specific material
-            generateMaterialWiseSiteDetailsPDF(data.selectedMaterialReport || data, selectedSite);
+            if (selectedFormat === 'pdf') {
+              generateMaterialWiseSiteDetailsPDF(data.selectedMaterialReport || data, selectedSite);
+            } else if (selectedFormat === 'excel') {
+              generateMaterialWiseSiteDetailsExcel(data.selectedMaterialReport || data, selectedSite);
+            }
           } else if (selectedMaterial && selectedSite) {
             // Need to fetch material details
             const materialData = await reportsService.getMaterialWiseReports(selectedMaterial);
-            generateMaterialWiseSiteDetailsPDF(materialData, selectedSite);
+            if (selectedFormat === 'pdf') {
+              generateMaterialWiseSiteDetailsPDF(materialData, selectedSite);
+            } else if (selectedFormat === 'excel') {
+              generateMaterialWiseSiteDetailsExcel(materialData, selectedSite);
+            }
           }
         } else if (selectedOption === 'all-sites-overview') {
           const siteData = { siteReports: siteReportsArray, summary: siteReportsData?.summary };
-          generateSiteWisePDF(siteData, undefined, 'overview');
+          if (selectedFormat === 'pdf') {
+            generateSiteWisePDF(siteData, undefined, 'overview');
+          } else if (selectedFormat === 'excel') {
+            generateSiteWiseExcel(siteData, undefined, 'overview');
+          }
+        } else if (selectedOption === 'site-wise-report') {
+          // Use the selected site from Reports page if available
+          const selectedSiteData = data.selectedSite;
+          if (selectedSiteData) {
+            if (selectedFormat === 'pdf') {
+              generateSiteWisePDF({
+                site: selectedSiteData.site,
+                materials: selectedSiteData.materials
+              }, selectedSiteData.site.name, 'details');
+            } else if (selectedFormat === 'excel') {
+              generateSiteWiseExcel({
+                site: selectedSiteData.site,
+                materials: selectedSiteData.materials
+              }, selectedSiteData.site.name, 'details');
+            }
+          } else if (selectedSite) {
+            // Fallback: find site by ID if selectedSite is provided
+            const site = siteReportsArray.find((r: any) => r.site.id === selectedSite || r.site.name === selectedSite);
+            if (site) {
+              if (selectedFormat === 'pdf') {
+                generateSiteWisePDF({
+                  site: site.site,
+                  materials: site.materials
+                }, site.site.name, 'details');
+              } else if (selectedFormat === 'excel') {
+                generateSiteWiseExcel({
+                  site: site.site,
+                  materials: site.materials
+                }, site.site.name, 'details');
+              }
+            }
+          }
         }
       } else if (type === 'material') {
         if (selectedOption === 'overview') {
-          generateMaterialWiseOverviewPDF(data);
+          if (selectedFormat === 'pdf') {
+            generateMaterialWiseOverviewPDF(data);
+          } else if (selectedFormat === 'excel') {
+            generateMaterialWiseOverviewExcel(data);
+          }
         } else if (selectedOption === 'sites-overview') {
           if (materialName) {
-            generateMaterialWiseSitesOverviewPDF(data);
+            if (selectedFormat === 'pdf') {
+              generateMaterialWiseSitesOverviewPDF(data);
+            } else if (selectedFormat === 'excel') {
+              generateMaterialWiseSitesOverviewExcel(data);
+            }
           } else if (selectedMaterial) {
             const materialData = await reportsService.getMaterialWiseReports(selectedMaterial);
-            generateMaterialWiseSitesOverviewPDF(materialData);
+            if (selectedFormat === 'pdf') {
+              generateMaterialWiseSitesOverviewPDF(materialData);
+            } else if (selectedFormat === 'excel') {
+              generateMaterialWiseSitesOverviewExcel(materialData);
+            }
           }
         } else if (selectedOption === 'site-details') {
           if (materialName && selectedSite) {
-            generateMaterialWiseSiteDetailsPDF(data, selectedSite);
+            if (selectedFormat === 'pdf') {
+              generateMaterialWiseSiteDetailsPDF(data, selectedSite);
+            } else if (selectedFormat === 'excel') {
+              generateMaterialWiseSiteDetailsExcel(data, selectedSite);
+            }
           } else if (selectedMaterial && selectedSite) {
             const materialData = await reportsService.getMaterialWiseReports(selectedMaterial);
-            generateMaterialWiseSiteDetailsPDF(materialData, selectedSite);
+            if (selectedFormat === 'pdf') {
+              generateMaterialWiseSiteDetailsPDF(materialData, selectedSite);
+            } else if (selectedFormat === 'excel') {
+              generateMaterialWiseSiteDetailsExcel(materialData, selectedSite);
+            }
           }
         }
       } else if (type === 'site') {
         if (selectedOption === 'overview') {
-          generateSiteWisePDF(data, undefined, 'overview');
+          if (selectedFormat === 'pdf') {
+            generateSiteWisePDF(data, undefined, 'overview');
+          } else if (selectedFormat === 'excel') {
+            generateSiteWiseExcel(data, undefined, 'overview');
+          }
         } else if (selectedOption === 'details' && selectedSite) {
           const site = data.siteReports?.find((r: any) => r.site.id === selectedSite);
           if (site) {
-            generateSiteWisePDF({
-              site: site.site,
-              materials: site.materials
-            }, site.site.name, 'details');
+            if (selectedFormat === 'pdf') {
+              generateSiteWisePDF({
+                site: site.site,
+                materials: site.materials
+              }, site.site.name, 'details');
+            } else if (selectedFormat === 'excel') {
+              generateSiteWiseExcel({
+                site: site.site,
+                materials: site.materials
+              }, site.site.name, 'details');
+            }
           }
         }
       } else if (type === 'inventory') {
         if (selectedOption === 'all') {
-          generateGodownInventoryPDF(data, undefined, 'all');
+          if (selectedFormat === 'pdf') {
+            generateGodownInventoryPDF(data, undefined, 'all');
+          } else if (selectedFormat === 'excel') {
+            generateGodownInventoryExcel(data, undefined, 'all');
+          }
         } else if (selectedOption === 'godown' && selectedGodown) {
           const godown = godowns.find((g: any) => g.id === selectedGodown);
           if (godown) {
             const filteredData = data.filter((item: any) => item.godown?.id === selectedGodown);
-            generateGodownInventoryPDF(filteredData, godown.name, 'godown');
+            if (selectedFormat === 'pdf') {
+              generateGodownInventoryPDF(filteredData, godown.name, 'godown');
+            } else if (selectedFormat === 'excel') {
+              generateGodownInventoryExcel(filteredData, godown.name, 'godown');
+            }
           }
         }
       }
       onClose();
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      console.error('Error generating report:', error);
+      alert(`Failed to generate ${selectedFormat === 'pdf' ? 'PDF' : 'Excel'} report. Please try again.`);
     }
   };
 
   const canDownload = () => {
+    // Format must be selected first
+    if (!selectedFormat) return false;
+    
     if (type === 'reports') {
       if (selectedOption === 'all-materials-overview') return true;
       if (selectedOption === 'material-sites-overview') return !!materialName || !!selectedMaterial;
       if (selectedOption === 'material-site-details') return !!selectedSite && (!!materialName || !!selectedMaterial);
       if (selectedOption === 'all-sites-overview') return true;
+      if (selectedOption === 'site-wise-report') return !!data.selectedSite || !!selectedSite;
     } else if (type === 'material') {
       if (selectedOption === 'overview') return true;
       if (selectedOption === 'sites-overview') return !!materialName || !!selectedMaterial;
@@ -246,9 +366,35 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>
-        <h3 style={{ marginTop: 0, marginBottom: '20px' }}>Download PDF Options</h3>
+        <h3 style={{ marginTop: 0, marginBottom: '20px' }}>Download Report</h3>
 
-        {(type === 'reports' || type === 'material') && (
+        {/* Format Selection - Show first */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+            Select Format:
+          </label>
+          <select
+            className="form-select"
+            value={selectedFormat}
+            onChange={(e) => {
+              const format = e.target.value;
+              setSelectedFormat(format === 'pdf' || format === 'excel' ? format : '');
+              // Reset report type when format changes
+              setSelectedOption('');
+              setSelectedSite('');
+              setSelectedMaterial('');
+              setSelectedGodown('');
+            }}
+            style={{ width: '100%' }}
+          >
+            <option value="">-- Select Format --</option>
+            <option value="pdf">PDF</option>
+            <option value="excel">Excel (XLSX)</option>
+          </select>
+        </div>
+
+        {/* Report Type Selection - Only show after format is selected */}
+        {selectedFormat && (type === 'reports' || type === 'material') && (
           <>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
@@ -271,6 +417,7 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
                     <option value="material-sites-overview">Material - All Sites Overview</option>
                     <option value="material-site-details">Material - Site-Wise Details</option>
                     <option value="all-sites-overview">All Sites Overview</option>
+                    <option value="site-wise-report">Site-Wise Report</option>
                   </>
                 )}
                 {type === 'material' && (
@@ -348,10 +495,56 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
                 </select>
               </div>
             )}
+
+            {/* Site selection for site-wise-report when no site is pre-selected */}
+            {selectedOption === 'site-wise-report' && !data.selectedSite && type === 'reports' && (
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                  Select Site:
+                </label>
+                <select
+                  className="form-select"
+                  value={selectedSite}
+                  onChange={(e) => setSelectedSite(e.target.value)}
+                  style={{ width: '100%' }}
+                >
+                  <option value="">-- Select Site --</option>
+                  {(() => {
+                    const siteReportsData = data.siteReports;
+                    const siteReportsArray = Array.isArray(siteReportsData) 
+                      ? siteReportsData 
+                      : (siteReportsData?.siteReports || []);
+                    return siteReportsArray.map((report: any) => (
+                      <option key={report.site.id} value={report.site.id}>
+                        {report.site.name}
+                      </option>
+                    ));
+                  })()}
+                </select>
+              </div>
+            )}
+
+            {/* Show selected site info for site-wise-report when site is pre-selected */}
+            {selectedOption === 'site-wise-report' && data.selectedSite && (
+              <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#e3f2fd', borderRadius: '4px' }}>
+                <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '5px' }}>
+                  Selected Site:
+                </div>
+                <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                  {data.selectedSite.site.name}
+                </div>
+                {data.selectedSite.site.address && (
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                    {data.selectedSite.site.address}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
 
-        {type === 'site' && (
+        {/* Report Type Selection for site type - Only show after format is selected */}
+        {selectedFormat && type === 'site' && (
           <>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
@@ -395,7 +588,8 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
           </>
         )}
 
-        {type === 'inventory' && (
+        {/* Report Type Selection for inventory type - Only show after format is selected */}
+        {selectedFormat && type === 'inventory' && (
           <>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
@@ -451,7 +645,7 @@ const PDFOptionsModal: React.FC<PDFOptionsModalProps> = ({
             onClick={handleDownload}
             disabled={!canDownload()}
           >
-            Download PDF
+            Download
           </button>
         </div>
       </div>

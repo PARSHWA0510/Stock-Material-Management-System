@@ -140,20 +140,20 @@ const Sites: React.FC = () => {
                 {canEdit && (
                   <td>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
+                    <button 
+                      className="btn btn-secondary" 
+                      onClick={() => handleEdit(site)}
+                    >
+                      Edit
+                    </button>
+                    {isAdmin && (
                       <button 
-                        className="btn btn-secondary" 
-                        onClick={() => handleEdit(site)}
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(site.id)}
                       >
-                        Edit
+                        Delete
                       </button>
-                      {isAdmin && (
-                        <button 
-                          className="btn btn-danger"
-                          onClick={() => handleDelete(site.id)}
-                        >
-                          Delete
-                        </button>
-                      )}
+                    )}
                     </div>
                   </td>
                 )}

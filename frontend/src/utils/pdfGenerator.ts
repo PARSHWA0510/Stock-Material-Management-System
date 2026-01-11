@@ -3,14 +3,32 @@ import autoTable from 'jspdf-autotable';
 
 // Helper function to format currency
 // Using plain number format to avoid jsPDF rendering issues with currency symbols
-const formatCurrency = (amount: number): string => {
+const formatCurrency = (amount: number | null | undefined): string => {
+  // Handle NaN, null, undefined, or invalid numbers
+  const numAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
   // Format number with commas and 2 decimal places
   // Using 'Rs.' prefix instead of ₹ symbol for better jsPDF compatibility
   const formatted = new Intl.NumberFormat('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(amount);
+  }).format(numAmount);
   return `Rs. ${formatted}`;
+};
+
+// Helper function to safely get rate value
+// If rate is missing/invalid, calculate from totalValue/quantity if possible
+const getSafeRate = (rate: number | null | undefined, totalValue: number | null | undefined, quantity: number | null | undefined): number => {
+  // If rate is valid, use it
+  if (typeof rate === 'number' && !isNaN(rate) && rate > 0) {
+    return rate;
+  }
+  // Otherwise, try to calculate from totalValue/quantity
+  if (typeof totalValue === 'number' && !isNaN(totalValue) && 
+      typeof quantity === 'number' && !isNaN(quantity) && quantity > 0) {
+    return totalValue / quantity;
+  }
+  // Default to 0 if we can't determine
+  return 0;
 };
 
 // Helper function to format date
@@ -308,14 +326,17 @@ export const generateMaterialWiseSiteDetailsPDF = (data: MaterialWiseData, siteN
       yPos += 10;
 
       const unit = data.material.unit;
-      const issuesData = siteDistribution.issues.map((issue) => [
-        formatDate(issue.date),
-        issue.issueId,
-        `${issue.quantity} ${unit}`,
-        formatCurrency(issue.rate),
-        formatCurrency(issue.totalValue),
-        issue.fromGodown || 'Direct'
-      ]);
+      const issuesData = siteDistribution.issues.map((issue) => {
+        const safeRate = getSafeRate(issue.rate, issue.totalValue, issue.quantity);
+        return [
+          formatDate(issue.date),
+          issue.issueId,
+          `${issue.quantity} ${unit}`,
+          formatCurrency(safeRate),
+          formatCurrency(issue.totalValue),
+          issue.fromGodown || 'Direct'
+        ];
+      });
 
       autoTable(doc, {
         startY: yPos,
@@ -497,13 +518,16 @@ export const generateGodownInventoryPDF = (inventory: InventoryItem[], godownNam
       : inventory;
 
     if (filteredInventory.length > 0) {
-      const tableData = filteredInventory.map((item) => [
-        item.material.name,
-        item.material.unit,
-        `${item.quantity} ${item.material.unit}`,
-        formatCurrency(item.rate),
-        formatCurrency(item.totalValue)
-      ]);
+      const tableData = filteredInventory.map((item) => {
+        const safeRate = getSafeRate(item.rate, item.totalValue, item.quantity);
+        return [
+          item.material.name,
+          item.material.unit,
+          `${item.quantity} ${item.material.unit}`,
+          formatCurrency(safeRate),
+          formatCurrency(item.totalValue)
+        ];
+      });
 
       autoTable(doc, {
         startY: yPos,

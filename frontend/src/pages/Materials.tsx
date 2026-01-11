@@ -6,6 +6,8 @@ import * as XLSX from 'xlsx';
 
 const Materials: React.FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [filteredMaterials, setFilteredMaterials] = useState<Material[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -29,12 +31,26 @@ const Materials: React.FC = () => {
       setError(''); // Clear any previous errors
       const data = await materialService.getAll();
       setMaterials(data);
+      setFilteredMaterials(data);
     } catch (error: unknown) {
       setError((error as ApiError)?.response?.data?.message || 'Failed to fetch materials');
     } finally {
       setLoading(false);
     }
   };
+
+  // Filter materials based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredMaterials(materials);
+    } else {
+      const searchLower = searchTerm.toLowerCase();
+      const filtered = materials.filter(material =>
+        material.name.toLowerCase().includes(searchLower)
+      );
+      setFilteredMaterials(filtered);
+    }
+  }, [searchTerm, materials]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -271,6 +287,16 @@ const Materials: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Materials List</h3>
+          <div style={{ marginTop: '15px' }}>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Search by material name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: '100%', maxWidth: '400px' }}
+            />
+          </div>
         </div>
         <div className="table-wrapper">
           <table className="table">
@@ -284,7 +310,14 @@ const Materials: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {materials.map((material) => (
+            {filteredMaterials.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ textAlign: 'center', padding: '20px' }}>
+                  {searchTerm ? `No materials found matching "${searchTerm}"` : 'No materials found'}
+                </td>
+              </tr>
+            ) : (
+              filteredMaterials.map((material) => (
               <tr key={material.id}>
                 <td>{material.name}</td>
                 <td>{material.unit}</td>
@@ -309,7 +342,8 @@ const Materials: React.FC = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
         </div>

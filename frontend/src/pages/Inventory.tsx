@@ -95,7 +95,7 @@ const Inventory: React.FC = () => {
             onClick={() => setShowPDFModal(true)}
             disabled={inventory.length === 0}
           >
-            Download PDF
+            Download
           </button>
           <select
             className="form-select"

@@ -38,13 +38,18 @@ export const createMaterial = async (req: Request<{}, Material, Omit<Material, '
   try {
     const { name, unit, hsnSac } = req.body;
 
-    // Check if material with same name already exists
-    const existingMaterial = await prisma.material.findUnique({
-      where: { name }
+    // Check if material with same name already exists (case-insensitive)
+    const existingMaterial = await prisma.material.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: 'insensitive'
+        }
+      }
     });
 
     if (existingMaterial) {
-      return res.status(400).json({ message: 'Material with this name already exists' });
+      return res.status(400).json({ message: `Material with name "${existingMaterial.name}" already exists (case-insensitive match)` });
     }
 
     const material = await prisma.material.create({
@@ -72,14 +77,19 @@ export const updateMaterial = async (req: Request<{ id: string }, Material, Part
       return res.status(404).json({ message: 'Material not found' });
     }
 
-    // Check if new name conflicts with existing material
-    if (name && name !== existingMaterial.name) {
-      const nameConflict = await prisma.material.findUnique({
-        where: { name }
+    // Check if new name conflicts with existing material (case-insensitive)
+    if (name && name.toLowerCase() !== existingMaterial.name.toLowerCase()) {
+      const nameConflict = await prisma.material.findFirst({
+        where: {
+          name: {
+            equals: name,
+            mode: 'insensitive'
+          }
+        }
       });
 
       if (nameConflict) {
-        return res.status(400).json({ message: 'Material with this name already exists' });
+        return res.status(400).json({ message: `Material with name "${nameConflict.name}" already exists (case-insensitive match)` });
       }
     }
 
@@ -159,13 +169,18 @@ export const bulkCreateMaterials = async (req: Request, res: Response) => {
       const trimmedUnit = unit.trim();
       const trimmedHsnSac = hsnSac?.trim() || null;
 
-      // Check if material with same name already exists
-      const existingMaterial = await prisma.material.findUnique({
-        where: { name: trimmedName }
+      // Check if material with same name already exists (case-insensitive)
+      const existingMaterial = await prisma.material.findFirst({
+        where: {
+          name: {
+            equals: trimmedName,
+            mode: 'insensitive'
+          }
+        }
       });
 
       if (existingMaterial) {
-        errors.push({ name: trimmedName, error: 'Material with this name already exists' });
+        errors.push({ name: trimmedName, error: `Material with name "${existingMaterial.name}" already exists (case-insensitive match)` });
         continue;
       }
 

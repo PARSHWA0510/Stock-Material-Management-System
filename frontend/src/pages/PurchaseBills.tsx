@@ -148,12 +148,12 @@ const PurchaseBills: React.FC = () => {
             : rate - (rate * discountPercent / 100);
           
           return {
-            ...item,
-            quantity: parseFloat(item.quantity.toString()) || 0,
+          ...item,
+          quantity: parseFloat(item.quantity.toString()) || 0,
             rate,
             discountPercent,
             netRate,
-            gstPercent: parseFloat(item.gstPercent.toString()) || 0
+          gstPercent: parseFloat(item.gstPercent.toString()) || 0
           };
         })
       };
@@ -415,20 +415,20 @@ const PurchaseBills: React.FC = () => {
                 <td>{bill.createdBy.name}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={() => handleView(bill)}
+                  >
+                    View
+                  </button>
+                  {isAdmin && (
                     <button 
-                      className="btn btn-secondary" 
-                      onClick={() => handleView(bill)}
+                      className="btn btn-danger"
+                      onClick={() => handleDelete(bill.id)}
                     >
-                      View
+                      Delete
                     </button>
-                    {isAdmin && (
-                      <button 
-                        className="btn btn-danger"
-                        onClick={() => handleDelete(bill.id)}
-                      >
-                        Delete
-                      </button>
-                    )}
+                  )}
                   </div>
                 </td>
               </tr>

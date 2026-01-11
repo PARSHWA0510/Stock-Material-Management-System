@@ -13,6 +13,8 @@ const Reports: React.FC = () => {
   const [selectedSite, setSelectedSite] = useState<SiteMaterialReport | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<SiteMaterialHistory | null>(null);
   const [materialWiseReports, setMaterialWiseReports] = useState<any>(null);
+  const [filteredMaterialWiseReports, setFilteredMaterialWiseReports] = useState<any>(null);
+  const [materialSearchTerm, setMaterialSearchTerm] = useState('');
   const [selectedMaterialReport, setSelectedMaterialReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMaterialWise, setLoadingMaterialWise] = useState(false);
@@ -69,6 +71,7 @@ const Reports: React.FC = () => {
         setSelectedMaterialReport(data);
       } else {
         setMaterialWiseReports(data);
+        setFilteredMaterialWiseReports(data);
       }
     } catch (err) {
       const apiError = err as ApiError;
@@ -77,6 +80,27 @@ const Reports: React.FC = () => {
       setLoadingMaterialWise(false);
     }
   };
+
+  // Filter material-wise reports based on search term
+  useEffect(() => {
+    if (!materialWiseReports) {
+      setFilteredMaterialWiseReports(null);
+      return;
+    }
+
+    if (!materialSearchTerm.trim()) {
+      setFilteredMaterialWiseReports(materialWiseReports);
+    } else {
+      const searchLower = materialSearchTerm.toLowerCase();
+      const filtered = {
+        ...materialWiseReports,
+        materialReports: materialWiseReports.materialReports.filter((report: any) =>
+          report.material.name.toLowerCase().includes(searchLower)
+        )
+      };
+      setFilteredMaterialWiseReports(filtered);
+    }
+  }, [materialSearchTerm, materialWiseReports]);
 
   const handleMaterialWiseSelect = async (materialId: string) => {
     await fetchMaterialWiseReports(materialId);
@@ -159,7 +183,7 @@ const Reports: React.FC = () => {
               (activeTab === 'material' && !materialWiseReports && !selectedMaterialReport)
             }
           >
-            Download PDF
+            Download
           </button>
           <button 
             className="btn btn-secondary"
@@ -191,7 +215,10 @@ const Reports: React.FC = () => {
           Site-Wise Reports
         </button>
         <button
-          onClick={() => setActiveTab('material')}
+          onClick={() => {
+            setActiveTab('material');
+            setMaterialSearchTerm(''); // Reset search when switching tabs
+          }}
           style={{
             padding: '10px 20px',
             backgroundColor: activeTab === 'material' ? '#3498db' : 'transparent',
@@ -552,6 +579,16 @@ const Reports: React.FC = () => {
             <div className="card">
               <div className="card-header">
                 <h3 className="card-title">Material-Wise Reports</h3>
+                <div style={{ marginTop: '15px' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Search by material name..."
+                    value={materialSearchTerm}
+                    onChange={(e) => setMaterialSearchTerm(e.target.value)}
+                    style={{ width: '100%', maxWidth: '400px' }}
+                  />
+                </div>
               </div>
               <div style={{ padding: '20px' }}>
                 <table className="table">
@@ -567,7 +604,14 @@ const Reports: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {materialWiseReports.materialReports.map((report: any) => (
+                    {filteredMaterialWiseReports && filteredMaterialWiseReports.materialReports.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>
+                          {materialSearchTerm ? `No materials found matching "${materialSearchTerm}"` : 'No materials found'}
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredMaterialWiseReports?.materialReports.map((report: any) => (
                       <tr key={report.material.id}>
                         <td>{report.material.name}</td>
                         <td>{report.material.unit}</td>
@@ -593,7 +637,8 @@ const Reports: React.FC = () => {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -612,7 +657,8 @@ const Reports: React.FC = () => {
         data={{
           siteReports: reports,
           materialReports: materialWiseReports,
-          selectedMaterialReport: selectedMaterialReport
+          selectedMaterialReport: selectedMaterialReport,
+          selectedSite: selectedSite
         }}
         materialName={selectedMaterialReport?.material?.name}
         siteName={selectedSite?.site?.name}

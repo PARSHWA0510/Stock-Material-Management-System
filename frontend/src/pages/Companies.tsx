@@ -6,6 +6,8 @@ import * as XLSX from 'xlsx';
 
 const Companies: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -32,12 +34,26 @@ const Companies: React.FC = () => {
       setError(''); // Clear any previous errors
       const data = await companyService.getAll();
       setCompanies(data);
+      setFilteredCompanies(data);
     } catch (error: unknown) {
       setError((error as ApiError)?.response?.data?.message || 'Failed to fetch companies');
     } finally {
       setLoading(false);
     }
   };
+
+  // Filter companies based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredCompanies(companies);
+    } else {
+      const searchLower = searchTerm.toLowerCase();
+      const filtered = companies.filter(company =>
+        company.name.toLowerCase().includes(searchLower)
+      );
+      setFilteredCompanies(filtered);
+    }
+  }, [searchTerm, companies]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,6 +296,16 @@ const Companies: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Companies List</h3>
+          <div style={{ marginTop: '15px' }}>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Search by company name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: '100%', maxWidth: '400px' }}
+            />
+          </div>
         </div>
         <div className="table-wrapper">
           <table className="table">
@@ -296,7 +322,14 @@ const Companies: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {companies.map((company) => (
+            {filteredCompanies.length === 0 ? (
+              <tr>
+                <td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>
+                  {searchTerm ? `No companies found matching "${searchTerm}"` : 'No companies found'}
+                </td>
+              </tr>
+            ) : (
+              filteredCompanies.map((company) => (
               <tr key={company.id}>
                 <td>{company.name}</td>
                 <td>{company.gstin || '-'}</td>
@@ -324,7 +357,8 @@ const Companies: React.FC = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
         </div>

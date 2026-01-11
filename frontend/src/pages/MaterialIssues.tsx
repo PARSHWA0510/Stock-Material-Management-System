@@ -451,20 +451,20 @@ const MaterialIssues: React.FC = () => {
                 <td>{issue.createdBy.name}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={() => handleView(issue)}
+                  >
+                    View
+                  </button>
+                  {isAdmin && (
                     <button 
-                      className="btn btn-secondary" 
-                      onClick={() => handleView(issue)}
+                      className="btn btn-danger"
+                      onClick={() => handleDelete(issue.id)}
                     >
-                      View
+                      Delete
                     </button>
-                    {isAdmin && (
-                      <button 
-                        className="btn btn-danger"
-                        onClick={() => handleDelete(issue.id)}
-                      >
-                        Delete
-                      </button>
-                    )}
+                  )}
                   </div>
                 </td>
               </tr>

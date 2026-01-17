@@ -35,3 +35,12 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Migration backups (contain sensitive production data)
+migration-backups/
+*.sql
+*.dump
+
+# Environment files with actual values
+.env.production
+*/.env.production

@@ -30,6 +30,7 @@ const PurchaseBills: React.FC = () => {
     deliveredToId: '',
     items: []
   });
+  const [expandedItemIds, setExpandedItemIds] = useState<string[]>([]);
 
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
@@ -212,6 +213,20 @@ const PurchaseBills: React.FC = () => {
       ...prevFormData,
       items: [newItem, ...prevFormData.items]
     }));
+    setExpandedItemIds(prev => [newItem.id, ...prev]);
+  };
+
+  const toggleItemAccordion = (itemId: string) => {
+    setExpandedItemIds(prev =>
+      prev.includes(itemId)
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const getMaterialName = (materialId: string) => {
+    if (!materialId) return 'Select Material';
+    return materials.find(material => material.id === materialId)?.name || 'Unknown Material';
   };
 
   const updateItem = (index: number, field: string, value: string | number) => {
@@ -272,8 +287,12 @@ const PurchaseBills: React.FC = () => {
   };
 
   const removeItem = (index: number) => {
+    const itemIdToRemove = formData.items[index]?.id;
     const newItems = formData.items.filter((_, i) => i !== index);
     setFormData({ ...formData, items: newItems });
+    if (itemIdToRemove) {
+      setExpandedItemIds(prev => prev.filter(id => id !== itemIdToRemove));
+    }
   };
 
   const getDeliveredToName = (bill: PurchaseBill) => {
@@ -456,14 +475,15 @@ const PurchaseBills: React.FC = () => {
             backgroundColor: 'white',
             padding: '20px',
             borderRadius: '8px',
-            width: '90%',
-            maxWidth: '800px',
+            width: 'min(95vw, 1200px)',
+            minWidth: '320px',
+            resize: 'both',
             maxHeight: '90vh',
-            overflowY: 'auto'
+            overflow: 'auto'
           }}>
             <h3>Add Purchase Bill</h3>
             <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '15px', marginBottom: '20px' }}>
                 <div className="form-group">
                   <label className="form-label">Company</label>
                   <select
@@ -554,126 +574,185 @@ const PurchaseBills: React.FC = () => {
                     borderRadius: '4px',
                     backgroundColor: '#f9f9f9'
                   }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '15px' }}>
-                      <div className="form-group">
-                        <label className="form-label">Material</label>
-                        <select
-                          className="form-select"
-                          value={item.materialId}
-                          onChange={(e) => {
-                            const material = materials.find(m => m.id === e.target.value);
-                            updateItem(index, 'materialId', e.target.value);
-                            if (material) {
-                              updateItem(index, 'unit', material.unit);
-                            }
+                    <div style={{ 
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: expandedItemIds.includes(item.id) ? '15px' : 0
+                    }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontWeight: 600, color: '#2c3e50' }}>
+                          Item {index + 1}
+                        </div>
+                        <div
+                          style={{
+                            color: '#666',
+                            marginTop: '4px',
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word'
                           }}
-                          required
+                          title={getMaterialName(item.materialId)}
                         >
-                          <option value="">Select Material</option>
-                          {materials.map(material => (
-                            <option key={material.id} value={material.id}>{material.name}</option>
-                          ))}
-                        </select>
+                          {getMaterialName(item.materialId)}
+                        </div>
                       </div>
-                      <div className="form-group">
-                        <label className="form-label">Quantity</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={item.quantity}
-                          onChange={(e) => handleQuantityChange(index, e.target.value)}
-                          min="0"
-                          step="0.01"
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Unit</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={item.unit}
-                          onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Rate</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={item.rate}
-                          onChange={(e) => handleRateChange(index, e.target.value)}
-                          min="0"
-                          step="0.01"
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Discount %</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={item.discountPercent && item.discountPercent !== 0 ? item.discountPercent : ''}
-                          onChange={(e) => handleDiscountChange(index, e.target.value)}
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          placeholder="0"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Net Rate</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={item.netRate ? item.netRate.toFixed(2) : '0.00'}
-                          readOnly
-                          style={{ backgroundColor: '#f5f5f5' }}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">GST %</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={item.gstPercent}
-                          onChange={(e) => handleGstChange(index, e.target.value)}
-                          min="0"
-                          step="0.01"
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Total (Excl. GST)</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={item.totalExclGst.toFixed(2)}
-                          readOnly
-                          style={{ backgroundColor: '#f5f5f5' }}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Total (Incl. GST)</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={item.totalInclGst.toFixed(2)}
-                          readOnly
-                          style={{ backgroundColor: '#f5f5f5' }}
-                        />
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => toggleItemAccordion(item.id)}
+                          style={{ padding: '6px 10px' }}
+                        >
+                          {expandedItemIds.includes(item.id) ? 'Close' : 'Open'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => removeItem(index)}
+                          style={{ padding: '6px 10px' }}
+                        >
+                          Remove
+                        </button>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <button
-                        type="button"
-                        className="btn btn-danger"
-                        onClick={() => removeItem(index)}
-                      >
-                        Remove
-                      </button>
-                    </div>
+                    {expandedItemIds.includes(item.id) && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '5px' }}>
+                        <div className="form-group">
+                          <label className="form-label">Material</label>
+                          <select
+                            className="form-select"
+                            value={item.materialId}
+                            onChange={(e) => {
+                              const selectedMaterialId = e.target.value;
+                              const duplicateExists = formData.items.some(
+                                (existingItem, existingIndex) => existingIndex !== index && existingItem.materialId === selectedMaterialId
+                              );
+
+                              if (duplicateExists) {
+                                setError('This material is already added in another item. Please select a different material.');
+                                return;
+                              }
+
+                              const material = materials.find(m => m.id === selectedMaterialId);
+                              updateItem(index, 'materialId', selectedMaterialId);
+                              if (material) {
+                                updateItem(index, 'unit', material.unit);
+                              }
+                            }}
+                            required
+                          >
+                            <option value="">Select Material</option>
+                            {materials.map(material => {
+                              const alreadySelectedInOtherItem = formData.items.some(
+                                (existingItem, existingIndex) => existingIndex !== index && existingItem.materialId === material.id
+                              );
+
+                              return (
+                                <option
+                                  key={material.id}
+                                  value={material.id}
+                                  disabled={alreadySelectedInOtherItem}
+                                  style={alreadySelectedInOtherItem ? { color: '#e74c3c', fontWeight: 600 } : undefined}
+                                  title={alreadySelectedInOtherItem ? 'Already selected in another item' : material.name}
+                                >
+                                  {material.name}{alreadySelectedInOtherItem ? ' (Already added)' : ''}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Quantity</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={item.quantity}
+                            onChange={(e) => handleQuantityChange(index, e.target.value)}
+                            min="0"
+                            step="0.01"
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Unit</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={item.unit}
+                            onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Rate</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={item.rate}
+                            onChange={(e) => handleRateChange(index, e.target.value)}
+                            min="0"
+                            step="0.01"
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Discount %</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={item.discountPercent && item.discountPercent !== 0 ? item.discountPercent : ''}
+                            onChange={(e) => handleDiscountChange(index, e.target.value)}
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Net Rate</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={item.netRate ? item.netRate.toFixed(2) : '0.00'}
+                            readOnly
+                            style={{ backgroundColor: '#f5f5f5' }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">GST %</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={item.gstPercent}
+                            onChange={(e) => handleGstChange(index, e.target.value)}
+                            min="0"
+                            step="0.01"
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Total (Excl. GST)</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={item.totalExclGst.toFixed(2)}
+                            readOnly
+                            style={{ backgroundColor: '#f5f5f5' }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Total (Incl. GST)</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={item.totalInclGst.toFixed(2)}
+                            readOnly
+                            style={{ backgroundColor: '#f5f5f5' }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

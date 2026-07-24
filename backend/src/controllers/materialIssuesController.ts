@@ -226,10 +226,18 @@ export const deleteMaterialIssue = async (req: Request<{ id: string }>, res: Res
       return res.status(404).json({ message: 'Material issue not found' });
     }
 
-    // Delete the material issue (items will be deleted due to cascade)
-    await prisma.materialIssue.delete({
-      where: { id }
-    });
+    // Delete related stock transactions first so godown stock is restored
+    await prisma.$transaction([
+      prisma.stockTransaction.deleteMany({
+        where: {
+          referenceTable: 'material_issues',
+          referenceId: id
+        }
+      }),
+      prisma.materialIssue.delete({
+        where: { id }
+      })
+    ]);
 
     res.json({ message: 'Material issue deleted successfully' });
   } catch (error) {

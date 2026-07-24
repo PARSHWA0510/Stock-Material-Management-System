@@ -15,6 +15,7 @@
     "db:seed": "ts-node src/seed.ts",
     "db:seed:prod": "node production-seed.js",
     "db:populate-stock": "ts-node src/scripts/populateStockTransactions.ts",
+    "db:cleanup-orphaned-stock": "ts-node src/scripts/cleanupOrphanedStockTransactions.ts",
     "db:add-test-data": "ts-node src/scripts/addMoreTestData.ts",
     "test:stock-data": "ts-node src/scripts/testStockData.ts",
     "test:stock-calculation": "ts-node src/scripts/testStockCalculation.ts",

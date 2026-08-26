@@ -135,13 +135,15 @@ export const createMaterialIssue = async (req: Request<{}, any, CreateMaterialIs
       }
     }
 
-    // Generate next identifier
-    const lastIssue = await prisma.materialIssue.findFirst({
-      orderBy: { identifier: 'desc' }
-    });
-    const nextIdentifier = lastIssue ? 
-      `MI-${String(parseInt(lastIssue.identifier.split('-')[1]) + 1).padStart(3, '0')}` : 
-      'MI-001';
+    // Generate next identifier using numeric max.
+    // Lexicographic orderBy identifier fails after MI-999 (e.g. "MI-999" > "MI-1000").
+    const [{ max }] = await prisma.$queryRaw<[{ max: number | null }]>`
+      SELECT COALESCE(MAX(CAST(SPLIT_PART(identifier, '-', 2) AS INTEGER)), 0) AS max
+      FROM material_issues
+      WHERE identifier ~ '^MI-[0-9]+$'
+    `;
+    const nextSeq = Number(max ?? 0) + 1;
+    const nextIdentifier = `MI-${String(nextSeq).padStart(Math.max(3, String(nextSeq).length), '0')}`;
 
     // Create material issue with items
     const materialIssue = await prisma.materialIssue.create({

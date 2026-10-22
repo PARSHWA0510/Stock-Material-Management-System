@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { reportsService } from '../services/reportsService';
 import PDFOptionsModal from '../components/PDFOptionsModal';
+import { getMaterialMovements } from '../utils/materialMovements';
 import type { 
   SiteMaterialReportsResponse, 
   SiteMaterialReport, 
@@ -16,6 +17,8 @@ const Reports: React.FC = () => {
   const [filteredMaterialWiseReports, setFilteredMaterialWiseReports] = useState<any>(null);
   const [materialSearchTerm, setMaterialSearchTerm] = useState('');
   const [selectedMaterialReport, setSelectedMaterialReport] = useState<any>(null);
+  const [ledgerSiteFilter, setLedgerSiteFilter] = useState('');
+  const [ledgerSupplierFilter, setLedgerSupplierFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadingMaterialWise, setLoadingMaterialWise] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +72,8 @@ const Reports: React.FC = () => {
       const data = await reportsService.getMaterialWiseReports(materialId);
       if (materialId) {
         setSelectedMaterialReport(data);
+        setLedgerSiteFilter('');
+        setLedgerSupplierFilter('');
       } else {
         setMaterialWiseReports(data);
         setFilteredMaterialWiseReports(data);
@@ -521,7 +526,11 @@ const Reports: React.FC = () => {
             <div className="card">
               <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 className="card-title">Material: {selectedMaterialReport.material.name}</h3>
-                <button className="btn btn-secondary" onClick={() => setSelectedMaterialReport(null)}>
+                <button className="btn btn-secondary" onClick={() => {
+                  setSelectedMaterialReport(null);
+                  setLedgerSiteFilter('');
+                  setLedgerSupplierFilter('');
+                }}>
                   Back to List
                 </button>
               </div>
@@ -550,29 +559,201 @@ const Reports: React.FC = () => {
                   </div>
                 </div>
 
-                {selectedMaterialReport.distribution && selectedMaterialReport.distribution.length > 0 && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <h4>Distribution to Sites</h4>
-                    <table className="table" style={{ marginTop: '10px' }}>
-                      <thead>
-                        <tr>
-                          <th>Site Name</th>
-                          <th>Quantity</th>
-                          <th>Total Value</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedMaterialReport.distribution.map((dist: any, idx: number) => (
-                          <tr key={idx}>
-                            <td>{dist.siteName}</td>
-                            <td>{dist.totalQuantity} {selectedMaterialReport.material.unit}</td>
-                            <td>₹{dist.totalValue.toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                {(() => {
+                  const allMovements = getMaterialMovements(selectedMaterialReport);
+                  const supplierOptions = [...new Set(
+                    (selectedMaterialReport.additions || [])
+                      .map((addition: any) => addition.company)
+                      .filter(Boolean)
+                  )].sort();
+                  const siteOptions = [...new Set(
+                    (selectedMaterialReport.distribution || [])
+                      .map((dist: any) => dist.siteName)
+                      .filter(Boolean)
+                  )].sort();
+
+                  const filteredRows = allMovements.filter((row) => {
+                    if (ledgerSupplierFilter && row.type === 'INWARD' && row.details !== ledgerSupplierFilter) {
+                      return false;
+                    }
+                    if (ledgerSiteFilter && row.type === 'OUTWARD' && row.details !== ledgerSiteFilter) {
+                      return false;
+                    }
+                    if (
+                      ledgerSiteFilter &&
+                      row.type === 'INWARD' &&
+                      row.location.includes('(Site)') &&
+                      !row.location.includes(ledgerSiteFilter)
+                    ) {
+                      return false;
+                    }
+                    return true;
+                  });
+
+                  let runningRemaining = 0;
+                  const movements = filteredRows.map((row) => {
+                    runningRemaining += row.inwardQty - row.outwardQty;
+                    return { ...row, remaining: runningRemaining };
+                  });
+
+                  const unit = selectedMaterialReport.material.unit;
+                  const totalInward = movements.reduce((sum, row) => sum + row.inwardQty, 0);
+                  const totalOutward = movements.reduce((sum, row) => sum + row.outwardQty, 0);
+                  const finalRemaining = movements.length > 0 ? movements[movements.length - 1].remaining : 0;
+                  const filtersActive = Boolean(ledgerSiteFilter || ledgerSupplierFilter);
+                  const siteTotals = (selectedMaterialReport.distribution || []).filter((dist: any) =>
+                    !ledgerSiteFilter || dist.siteName === ledgerSiteFilter
+                  );
+
+                  return (
+                    <div style={{ marginBottom: '20px' }}>
+                      <h4>Movement Ledger</h4>
+                      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', margin: '12px 0 8px' }}>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Filter by Site:</label>
+                          <select
+                            value={ledgerSiteFilter}
+                            onChange={(e) => setLedgerSiteFilter(e.target.value)}
+                            style={{
+                              padding: '8px 12px',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              minWidth: '180px'
+                            }}
+                          >
+                            <option value="">All Sites</option>
+                            {siteOptions.map((siteName: string) => (
+                              <option key={siteName} value={siteName}>{siteName}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Filter by Supplier:</label>
+                          <select
+                            value={ledgerSupplierFilter}
+                            onChange={(e) => setLedgerSupplierFilter(e.target.value)}
+                            style={{
+                              padding: '8px 12px',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              minWidth: '180px'
+                            }}
+                          >
+                            <option value="">All Suppliers</option>
+                            {supplierOptions.map((company: string) => (
+                              <option key={company} value={company}>{company}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {filtersActive && (
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => {
+                              setLedgerSiteFilter('');
+                              setLedgerSupplierFilter('');
+                            }}
+                            style={{ padding: '8px 12px' }}
+                          >
+                            Clear Filters
+                          </button>
+                        )}
+                      </div>
+
+                      {allMovements.length === 0 ? (
+                        <div style={{ color: '#666', padding: '20px 0' }}>No inward or outward records for this material.</div>
+                      ) : movements.length === 0 ? (
+                        <div style={{ color: '#666', padding: '20px 0' }}>No movements match the selected filters.</div>
+                      ) : (
+                      <div className="table-wrapper">
+                        <table className="table" style={{ marginTop: '10px' }}>
+                          <thead>
+                            <tr>
+                              <th>Date</th>
+                              <th>Type</th>
+                              <th>Particulars</th>
+                              <th>Reference</th>
+                              <th>Location</th>
+                              <th>Inward</th>
+                              <th>Outward</th>
+                              <th>Remaining</th>
+                              <th>Value</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {movements.map((row) => (
+                              <tr key={row.key}>
+                                <td>{formatDate(row.date)}</td>
+                                <td>
+                                  <span style={{
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    borderRadius: '12px',
+                                    backgroundColor: row.type === 'INWARD' ? '#e8f5e8' : '#fff3cd',
+                                    color: row.type === 'INWARD' ? '#2e7d32' : '#8a6d3b',
+                                    fontWeight: 600
+                                  }}>
+                                    {row.type === 'INWARD' ? 'Inward' : 'Outward'}
+                                  </span>
+                                </td>
+                                <td>
+                                  {row.type === 'INWARD' ? (
+                                    <>
+                                      <div>{row.details}</div>
+                                      <div style={{ fontSize: '12px', color: '#666' }}>Purchase bill</div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div>{row.details}</div>
+                                      <div style={{ fontSize: '12px', color: '#666' }}>Issued to site</div>
+                                    </>
+                                  )}
+                                </td>
+                                <td>{row.reference}</td>
+                                <td>{row.location}</td>
+                                <td>{row.inwardQty ? `${row.inwardQty} ${unit}` : '-'}</td>
+                                <td>{row.outwardQty ? `${row.outwardQty} ${unit}` : '-'}</td>
+                                <td style={{ fontWeight: 600 }}>{row.remaining} {unit}</td>
+                                <td>₹{row.value.toFixed(2)}</td>
+                              </tr>
+                            ))}
+                            <tr style={{ backgroundColor: '#f8f9fa', fontWeight: 600 }}>
+                              <td colSpan={5}>{filtersActive ? 'Filtered totals' : 'Totals (matches summary)'}</td>
+                              <td>{totalInward} {unit}</td>
+                              <td>{totalOutward} {unit}</td>
+                              <td>{finalRemaining} {unit}</td>
+                              <td></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      )}
+
+                      {siteTotals.length > 0 && (
+                        <div style={{ marginTop: '16px' }}>
+                          <div style={{ fontWeight: 600, marginBottom: '8px' }}>Issued to sites</div>
+                          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            {siteTotals.map((dist: any, idx: number) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  border: '1px solid #eee',
+                                  borderRadius: '8px',
+                                  padding: '10px 14px',
+                                  backgroundColor: '#fff'
+                                }}
+                              >
+                                <div style={{ fontWeight: 600 }}>{dist.siteName}</div>
+                                <div style={{ color: '#666', fontSize: '13px' }}>
+                                  {dist.totalQuantity} {unit} · ₹{Number(dist.totalValue).toFixed(2)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           ) : materialWiseReports ? (

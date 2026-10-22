@@ -121,7 +121,68 @@ async function main() {
     }
   });
 
-  // Create Purchase Bills
+  const seedInvoiceNumbers = ['INV-001-2024', 'INV-002-2024', 'INV-003-2024'];
+  const seedIssueIdentifiers = ['MI-001-2024', 'MI-002-2024', 'MI-003-2024'];
+
+  const existingSeedBills = await prisma.purchaseBill.findMany({
+    where: { invoiceNumber: { in: seedInvoiceNumbers } },
+    select: { id: true }
+  });
+  const existingSeedIssues = await prisma.materialIssue.findMany({
+    where: { identifier: { in: seedIssueIdentifiers } },
+    select: { id: true }
+  });
+  const seedReferenceIds = [
+    ...existingSeedBills.map(bill => bill.id),
+    ...existingSeedIssues.map(issue => issue.id)
+  ];
+
+  if (seedReferenceIds.length > 0) {
+    await prisma.stockTransaction.deleteMany({
+      where: { referenceId: { in: seedReferenceIds } }
+    });
+  }
+  if (existingSeedIssues.length > 0) {
+    await prisma.materialIssue.deleteMany({
+      where: { id: { in: existingSeedIssues.map(issue => issue.id) } }
+    });
+  }
+  if (existingSeedBills.length > 0) {
+    await prisma.purchaseBill.deleteMany({
+      where: { id: { in: existingSeedBills.map(bill => bill.id) } }
+    });
+  }
+
+  const createStockTx = async (data: {
+    materialId: string;
+    godownId?: string | null;
+    siteId?: string | null;
+    txType: 'IN' | 'OUT';
+    referenceTable: string;
+    referenceId: string;
+    quantity: number;
+    rate: number;
+    gstPercent?: number;
+    txDate: Date;
+  }) => {
+    await prisma.stockTransaction.create({
+      data: {
+        materialId: data.materialId,
+        godownId: data.godownId ?? null,
+        siteId: data.siteId ?? null,
+        txType: data.txType,
+        referenceTable: data.referenceTable,
+        referenceId: data.referenceId,
+        quantity: data.quantity,
+        rate: data.rate,
+        gstPercent: data.gstPercent ?? 18,
+        balanceAfter: 0,
+        txDate: data.txDate
+      }
+    });
+  };
+
+  // Cement + Steel from ABC Suppliers into Main Godown
   const purchaseBill1 = await prisma.purchaseBill.create({
     data: {
       companyId: company1.id,
@@ -162,6 +223,28 @@ async function main() {
     }
   });
 
+  await createStockTx({
+    materialId: cement.id,
+    godownId: mainGodown.id,
+    txType: 'IN',
+    referenceTable: 'purchase_bills',
+    referenceId: purchaseBill1.id,
+    quantity: 100,
+    rate: 400,
+    txDate: new Date('2024-01-15')
+  });
+  await createStockTx({
+    materialId: steelRod.id,
+    godownId: mainGodown.id,
+    txType: 'IN',
+    referenceTable: 'purchase_bills',
+    referenceId: purchaseBill1.id,
+    quantity: 500,
+    rate: 80,
+    txDate: new Date('2024-01-15')
+  });
+
+  // Cable from XYZ Materials delivered directly to Dahej Site
   const purchaseBill2 = await prisma.purchaseBill.create({
     data: {
       companyId: company2.id,
@@ -190,7 +273,67 @@ async function main() {
     }
   });
 
-  // Create Material Issues
+  await createStockTx({
+    materialId: cable.id,
+    siteId: dahejSite.id,
+    txType: 'IN',
+    referenceTable: 'purchase_bills',
+    referenceId: purchaseBill2.id,
+    quantity: 1000,
+    rate: 25,
+    txDate: new Date('2024-01-20')
+  });
+  await createStockTx({
+    materialId: cable.id,
+    siteId: dahejSite.id,
+    txType: 'OUT',
+    referenceTable: 'purchase_bills',
+    referenceId: purchaseBill2.id,
+    quantity: 1000,
+    rate: 25,
+    txDate: new Date('2024-01-20')
+  });
+
+  // Cement from XYZ Materials into Main Godown (second company + later inward date)
+  const purchaseBill3 = await prisma.purchaseBill.create({
+    data: {
+      companyId: company2.id,
+      invoiceNumber: 'INV-003-2024',
+      gstinNumber: '30FGHIJ5678K2L6',
+      billDate: new Date('2024-02-10'),
+      deliveredToType: 'GODOWN',
+      deliveredToId: mainGodown.id,
+      createdById: admin.id,
+      items: {
+        create: [
+          {
+            materialId: cement.id,
+            quantity: 80,
+            unit: 'Bag',
+            rate: 420,
+            discountPercent: 0,
+            netRate: 420,
+            gstPercent: 18,
+            totalExclGst: 33600,
+            totalInclGst: 39648,
+            locationInGodown: 'A-1-01'
+          }
+        ]
+      }
+    }
+  });
+
+  await createStockTx({
+    materialId: cement.id,
+    godownId: mainGodown.id,
+    txType: 'IN',
+    referenceTable: 'purchase_bills',
+    referenceId: purchaseBill3.id,
+    quantity: 80,
+    rate: 420,
+    txDate: new Date('2024-02-10')
+  });
+
   const materialIssue1 = await prisma.materialIssue.create({
     data: {
       identifier: 'MI-001-2024',
@@ -223,6 +366,29 @@ async function main() {
     }
   });
 
+  await createStockTx({
+    materialId: cement.id,
+    godownId: mainGodown.id,
+    siteId: dahejSite.id,
+    txType: 'OUT',
+    referenceTable: 'material_issues',
+    referenceId: materialIssue1.id,
+    quantity: 50,
+    rate: 400,
+    txDate: new Date('2024-01-25')
+  });
+  await createStockTx({
+    materialId: steelRod.id,
+    godownId: mainGodown.id,
+    siteId: dahejSite.id,
+    txType: 'OUT',
+    referenceTable: 'material_issues',
+    referenceId: materialIssue1.id,
+    quantity: 200,
+    rate: 80,
+    txDate: new Date('2024-01-25')
+  });
+
   const materialIssue2 = await prisma.materialIssue.create({
     data: {
       identifier: 'MI-002-2024',
@@ -246,10 +412,58 @@ async function main() {
     }
   });
 
+  await createStockTx({
+    materialId: cement.id,
+    godownId: mainGodown.id,
+    siteId: mumbaiSite.id,
+    txType: 'OUT',
+    referenceTable: 'material_issues',
+    referenceId: materialIssue2.id,
+    quantity: 30,
+    rate: 400,
+    txDate: new Date('2024-01-30')
+  });
+
+  const materialIssue3 = await prisma.materialIssue.create({
+    data: {
+      identifier: 'MI-003-2024',
+      issueDate: new Date('2024-02-12'),
+      siteId: dahejSite.id,
+      fromGodownId: mainGodown.id,
+      createdById: storekeeper.id,
+      items: {
+        create: [
+          {
+            materialId: cement.id,
+            quantity: 40,
+            unit: 'Bag',
+            rate: 420,
+            totalExclGst: 16800,
+            gstPercent: 18,
+            totalInclGst: 19824
+          }
+        ]
+      }
+    }
+  });
+
+  await createStockTx({
+    materialId: cement.id,
+    godownId: mainGodown.id,
+    siteId: dahejSite.id,
+    txType: 'OUT',
+    referenceTable: 'material_issues',
+    referenceId: materialIssue3.id,
+    quantity: 40,
+    rate: 420,
+    txDate: new Date('2024-02-12')
+  });
+
   console.log('✅ Database seeded successfully!');
   console.log('👤 Admin user: admin@example.com / admin123');
   console.log('👤 Storekeeper user: storekeeper@example.com / admin123');
-  console.log('📦 Created 2 purchase bills and 2 material issues');
+  console.log('📦 Created 3 purchase bills and 3 material issues');
+  console.log('🧱 Cement sample: ABC (15 Jan) + XYZ (10 Feb) inward; outward 25 Jan, 30 Jan, 12 Feb');
 }
 
 main()

@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { getMaterialMovements } from './materialMovements';
 
 // Helper function to format currency
 const formatCurrency = (amount: number | null | undefined): number => {
@@ -57,6 +58,16 @@ interface MaterialWiseData {
       totalValue: number;
       fromGodown?: string;
     }>;
+  }>;
+  additions?: Array<{
+    date: string;
+    invoiceNumber: string;
+    company: string;
+    quantity: number;
+    rate: number;
+    totalValue: number;
+    deliveredTo: string;
+    deliveredToName?: string;
   }>;
   materialReports?: MaterialReport[];
 }
@@ -193,7 +204,55 @@ export const generateMaterialWiseSitesOverviewExcel = (data: MaterialWiseData) =
       XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
     }
 
-    // Distribution sheet
+    const movements = getMaterialMovements(data);
+    if (movements.length > 0) {
+      const unit = data.material.unit;
+      const totalInward = movements.reduce((sum, row) => sum + row.inwardQty, 0);
+      const totalOutward = movements.reduce((sum, row) => sum + row.outwardQty, 0);
+      const finalRemaining = movements[movements.length - 1].remaining;
+      const ledgerData = [
+        ['Date', 'Type', 'Particulars', 'Reference', 'Location', 'Inward', 'Outward', 'Remaining', 'Value (Rs.)']
+      ];
+      movements.forEach((row) => {
+        ledgerData.push([
+          formatDate(row.date),
+          row.type === 'INWARD' ? 'Inward' : 'Outward',
+          row.details,
+          row.reference,
+          row.location,
+          row.inwardQty ? `${row.inwardQty} ${unit}` : '-',
+          row.outwardQty ? `${row.outwardQty} ${unit}` : '-',
+          `${row.remaining} ${unit}`,
+          String(formatCurrency(row.value))
+        ]);
+      });
+      ledgerData.push([
+        'Totals',
+        '',
+        '',
+        '',
+        '',
+        `${totalInward} ${unit}`,
+        `${totalOutward} ${unit}`,
+        `${finalRemaining} ${unit}`,
+        ''
+      ]);
+      const ledgerSheet = XLSX.utils.aoa_to_sheet(ledgerData);
+      ledgerSheet['!cols'] = [
+        { wch: 14 },
+        { wch: 10 },
+        { wch: 22 },
+        { wch: 16 },
+        { wch: 24 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 16 }
+      ];
+      XLSX.utils.book_append_sheet(workbook, ledgerSheet, 'Movement Ledger');
+    }
+
+    // Site totals sheet
     if (data.distribution && data.distribution.length > 0) {
       const distributionData = [
         ['Site Name', 'Total Quantity', 'Total Value (Rs.)']

@@ -447,6 +447,23 @@ export const getMaterialWiseReports = async (req: Request, res: Response) => {
         orderBy: { billDate: 'desc' }
       });
 
+      const godownIds = [...new Set(
+        purchaseBills.filter(bill => bill.deliveredToType === 'GODOWN').map(bill => bill.deliveredToId)
+      )];
+      const siteIdsFromBills = [...new Set(
+        purchaseBills.filter(bill => bill.deliveredToType === 'SITE').map(bill => bill.deliveredToId)
+      )];
+      const [godowns, deliverySites] = await Promise.all([
+        godownIds.length
+          ? prisma.godown.findMany({ where: { id: { in: godownIds } } })
+          : Promise.resolve([]),
+        siteIdsFromBills.length
+          ? prisma.site.findMany({ where: { id: { in: siteIdsFromBills } } })
+          : Promise.resolve([])
+      ]);
+      const godownNameById = new Map(godowns.map(godown => [godown.id, godown.name]));
+      const siteNameById = new Map(deliverySites.map(site => [site.id, site.name]));
+
       // Get all material issues that sent this material to sites
       const materialIssues = await prisma.materialIssue.findMany({
         where: {
@@ -480,6 +497,9 @@ export const getMaterialWiseReports = async (req: Request, res: Response) => {
           const gstPercent = Number(item.gstPercent || 0);
           // Calculate total value with GST
           const totalValue = quantity * rate * (1 + gstPercent / 100);
+          const deliveredToName = bill.deliveredToType === 'GODOWN'
+            ? godownNameById.get(bill.deliveredToId) || 'Godown'
+            : siteNameById.get(bill.deliveredToId) || 'Site';
           additions.push({
             date: bill.billDate,
             quantity,
@@ -488,6 +508,7 @@ export const getMaterialWiseReports = async (req: Request, res: Response) => {
             invoiceNumber: bill.invoiceNumber,
             company: bill.company.name,
             deliveredTo: bill.deliveredToType === 'GODOWN' ? 'Godown' : 'Site',
+            deliveredToName,
             purchaseBillId: bill.id
           });
         }

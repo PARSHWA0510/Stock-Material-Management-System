@@ -120,6 +120,7 @@ const Sites: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Sites List</h3>
+          <span className="count-badge">Total: {sites.length}</span>
         </div>
         <div className="table-wrapper">
           <table className="table">

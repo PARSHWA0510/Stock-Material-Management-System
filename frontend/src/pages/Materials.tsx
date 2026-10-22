@@ -287,16 +287,21 @@ const Materials: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Materials List</h3>
-          <div style={{ marginTop: '15px' }}>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Search by material name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: '100%', maxWidth: '400px' }}
-            />
-          </div>
+          <span className="count-badge">
+            {searchTerm
+              ? `Showing ${filteredMaterials.length} of ${materials.length}`
+              : `Total: ${materials.length}`}
+          </span>
+        </div>
+        <div style={{ marginBottom: '15px' }}>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Search by material name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: '100%', maxWidth: '400px' }}
+          />
         </div>
         <div className="table-wrapper">
           <table className="table">

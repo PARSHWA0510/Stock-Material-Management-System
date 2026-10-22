@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { purchaseBillService } from '../services/purchaseBillService';
 import { materialService } from '../services/materialService';
 import { companyService } from '../services/companyService';
@@ -9,7 +9,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 const PurchaseBills: React.FC = () => {
   const [purchaseBills, setPurchaseBills] = useState<PurchaseBill[]>([]);
-  const [filteredPurchaseBills, setFilteredPurchaseBills] = useState<PurchaseBill[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
@@ -21,6 +20,10 @@ const PurchaseBills: React.FC = () => {
   const [selectedBill, setSelectedBill] = useState<PurchaseBill | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [itemSearchTerm, setItemSearchTerm] = useState<string>('');
+  const [expandedCompanyIds, setExpandedCompanyIds] = useState<string[]>([]);
+  const [expandedBillIds, setExpandedBillIds] = useState<string[]>([]);
   const [formData, setFormData] = useState<PurchaseBillFormData>({
     companyId: '',
     invoiceNumber: '',
@@ -66,7 +69,6 @@ const PurchaseBills: React.FC = () => {
       ]);
 
       setPurchaseBills(purchaseBillsData);
-      setFilteredPurchaseBills(purchaseBillsData);
       setMaterials(materialsData);
       setCompanies(companiesData);
       setSites(sitesData);
@@ -79,15 +81,12 @@ const PurchaseBills: React.FC = () => {
     }
   };
 
-  // Filter purchase bills by year and month
-  useEffect(() => {
+  const filteredPurchaseBills = useMemo(() => {
     let filtered = purchaseBills;
+    const searchLower = itemSearchTerm.trim().toLowerCase();
 
     if (selectedYear) {
-      filtered = filtered.filter(bill => {
-        const billYear = new Date(bill.billDate).getFullYear().toString();
-        return billYear === selectedYear;
-      });
+      filtered = filtered.filter(bill => new Date(bill.billDate).getFullYear().toString() === selectedYear);
     }
 
     if (selectedMonth) {
@@ -97,8 +96,53 @@ const PurchaseBills: React.FC = () => {
       });
     }
 
-    setFilteredPurchaseBills(filtered);
-  }, [purchaseBills, selectedYear, selectedMonth]);
+    if (selectedCompanyId) {
+      filtered = filtered.filter(bill => bill.companyId === selectedCompanyId);
+    }
+
+    if (searchLower) {
+      filtered = filtered.filter(bill =>
+        bill.items.some(item => item.material.name.toLowerCase().includes(searchLower))
+      );
+    }
+
+    return filtered;
+  }, [purchaseBills, selectedYear, selectedMonth, selectedCompanyId, itemSearchTerm]);
+
+  const billsGroupedByCompany = useMemo(() => {
+    const groups = new Map<string, { company: Company; bills: PurchaseBill[] }>();
+
+    filteredPurchaseBills.forEach(bill => {
+      const existing = groups.get(bill.companyId);
+      if (existing) {
+        existing.bills.push(bill);
+      } else {
+        groups.set(bill.companyId, { company: bill.company, bills: [bill] });
+      }
+    });
+
+    return Array.from(groups.values())
+      .map(group => ({
+        ...group,
+        bills: [...group.bills].sort(
+          (a, b) => new Date(b.billDate).getTime() - new Date(a.billDate).getTime()
+        )
+      }))
+      .sort((a, b) => a.company.name.localeCompare(b.company.name));
+  }, [filteredPurchaseBills]);
+
+  // Auto-expand matching results when company or item search is applied
+  useEffect(() => {
+    if (itemSearchTerm.trim()) {
+      setExpandedCompanyIds([...new Set(filteredPurchaseBills.map(bill => bill.companyId))]);
+      setExpandedBillIds(filteredPurchaseBills.map(bill => bill.id));
+      return;
+    }
+
+    if (selectedCompanyId) {
+      setExpandedCompanyIds([selectedCompanyId]);
+    }
+  }, [itemSearchTerm, selectedCompanyId, filteredPurchaseBills]);
 
   // Get unique years from purchase bills
   const getAvailableYears = () => {
@@ -115,6 +159,58 @@ const PurchaseBills: React.FC = () => {
         .map(bill => new Date(bill.billDate).getMonth() + 1)
     )];
     return months.sort((a, b) => b - a); // Sort descending (newest first)
+  };
+
+  const getCompaniesForFilter = () => {
+    let bills = purchaseBills;
+    if (selectedYear) {
+      bills = bills.filter(bill => new Date(bill.billDate).getFullYear().toString() === selectedYear);
+    }
+    if (selectedMonth) {
+      bills = bills.filter(bill => {
+        const billMonth = (new Date(bill.billDate).getMonth() + 1).toString().padStart(2, '0');
+        return billMonth === selectedMonth;
+      });
+    }
+
+    const uniqueCompanies = new Map<string, Company>();
+    bills.forEach(bill => {
+      if (!uniqueCompanies.has(bill.companyId)) {
+        uniqueCompanies.set(bill.companyId, bill.company);
+      }
+    });
+
+    return Array.from(uniqueCompanies.values()).sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const toggleCompanyAccordion = (companyId: string) => {
+    setExpandedCompanyIds(prev =>
+      prev.includes(companyId)
+        ? prev.filter(id => id !== companyId)
+        : [...prev, companyId]
+    );
+  };
+
+  const toggleBillAccordion = (billId: string) => {
+    setExpandedBillIds(prev =>
+      prev.includes(billId)
+        ? prev.filter(id => id !== billId)
+        : [...prev, billId]
+    );
+  };
+
+  const isItemMatch = (itemName: string) => {
+    const searchLower = itemSearchTerm.trim().toLowerCase();
+    return Boolean(searchLower && itemName.toLowerCase().includes(searchLower));
+  };
+
+  const clearFilters = () => {
+    setSelectedYear('');
+    setSelectedMonth('');
+    setSelectedCompanyId('');
+    setItemSearchTerm('');
+    setExpandedCompanyIds([]);
+    setExpandedBillIds([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -345,115 +441,244 @@ const PurchaseBills: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Purchase Bills List</h3>
+          <span className="count-badge">
+            {billsGroupedByCompany.length} companies · {filteredPurchaseBills.length} of {purchaseBills.length} bills
+          </span>
         </div>
-        <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0' }}>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Filter by Year:</label>
-              <select
-                value={selectedYear}
-                onChange={(e) => {
-                  setSelectedYear(e.target.value);
-                  setSelectedMonth(''); // Reset month when year changes
-                }}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  minWidth: '120px'
-                }}
+        <div className="filter-toolbar">
+          <div className="filter-field">
+            <label className="form-label">Year</label>
+            <select
+              className="form-select"
+              value={selectedYear}
+              onChange={(e) => {
+                setSelectedYear(e.target.value);
+                setSelectedMonth('');
+                setSelectedCompanyId('');
+              }}
+            >
+              <option value="">All Years</option>
+              {getAvailableYears().map(year => (
+                <option key={year} value={year.toString()}>{year}</option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-field">
+            <label className="form-label">Month</label>
+            <select
+              className="form-select"
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                setSelectedCompanyId('');
+              }}
+              disabled={!selectedYear}
+              style={{ opacity: selectedYear ? 1 : 0.6 }}
+            >
+              <option value="">All Months</option>
+              {getAvailableMonths().map(month => (
+                <option key={month} value={month.toString().padStart(2, '0')}>
+                  {new Date(2024, month - 1).toLocaleDateString('en-US', { month: 'long' })}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-field">
+            <label className="form-label">Company</label>
+            <select
+              className="form-select"
+              value={selectedCompanyId}
+              onChange={(e) => setSelectedCompanyId(e.target.value)}
+            >
+              <option value="">All Companies</option>
+              {getCompaniesForFilter().map(company => (
+                <option key={company.id} value={company.id}>{company.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-field">
+            <label className="form-label">Item name</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Search material in bills..."
+              value={itemSearchTerm}
+              onChange={(e) => setItemSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="filter-actions">
+            {(selectedYear || selectedMonth || selectedCompanyId || itemSearchTerm) && (
+              <button
+                className="btn btn-secondary"
+                onClick={clearFilters}
+                style={{ padding: '8px 14px' }}
               >
-                <option value="">All Years</option>
-                {getAvailableYears().map(year => (
-                  <option key={year} value={year.toString()}>{year}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Filter by Month:</label>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                disabled={!selectedYear}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  minWidth: '120px',
-                  opacity: selectedYear ? 1 : 0.6
-                }}
-              >
-                <option value="">All Months</option>
-                {getAvailableMonths().map(month => (
-                  <option key={month} value={month.toString().padStart(2, '0')}>
-                    {new Date(2024, month - 1).toLocaleDateString('en-US', { month: 'long' })}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ color: '#666', fontSize: '14px' }}>
-                Showing {filteredPurchaseBills.length} of {purchaseBills.length} bills
-              </span>
-              {(selectedYear || selectedMonth) && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setSelectedYear('');
-                    setSelectedMonth('');
-                  }}
-                  style={{ padding: '6px 12px', fontSize: '14px' }}
-                >
-                  Clear Filters
-                </button>
-              )}
-            </div>
+                Clear Filters
+              </button>
+            )}
           </div>
         </div>
-        <div className="table-wrapper">
-          <table className="table">
-          <thead>
-            <tr>
-              <th>Invoice No.</th>
-              <th>Company</th>
-              <th>Bill Date</th>
-              <th>Delivered To</th>
-              <th>Total Amount</th>
-              <th>Created By</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPurchaseBills.map((bill) => (
-              <tr key={bill.id}>
-                <td>{bill.invoiceNumber}</td>
-                <td>{bill.company.name}</td>
-                <td>{new Date(bill.billDate).toLocaleDateString()}</td>
-                <td>{getDeliveredToName(bill)}</td>
-                <td>₹{getTotalAmount(bill).toLocaleString()}</td>
-                <td>{bill.createdBy.name}</td>
-                <td>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => handleView(bill)}
-                  >
-                    View
-                  </button>
-                  {isAdmin && (
-                    <button 
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(bill.id)}
+        <div>
+          {filteredPurchaseBills.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#667781' }}>
+              {itemSearchTerm || selectedCompanyId || selectedYear || selectedMonth
+                ? 'No purchase bills match the selected filters'
+                : 'No purchase bills found'}
+            </div>
+          ) : (
+            <div className="accordion-group">
+              {billsGroupedByCompany.map(group => {
+                const companyExpanded = expandedCompanyIds.includes(group.company.id);
+                const companyTotal = group.bills.reduce((sum, bill) => sum + getTotalAmount(bill), 0);
+                const initials = group.company.name
+                  .split(' ')
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map(word => word[0].toUpperCase())
+                  .join('');
+
+                return (
+                  <div key={group.company.id} className={`accordion-item${companyExpanded ? ' is-open' : ''}`}>
+                    <button
+                      type="button"
+                      className="accordion-trigger"
+                      onClick={() => toggleCompanyAccordion(group.company.id)}
                     >
-                      Delete
+                      <div className="accordion-trigger-main">
+                        <div className="company-avatar">{initials}</div>
+                        <div>
+                          <div className="accordion-trigger-title">{group.company.name}</div>
+                          <div className="accordion-trigger-meta">
+                            <span className="meta-pill">
+                              {group.bills.length} bill{group.bills.length === 1 ? '' : 's'}
+                            </span>
+                            <span className="meta-pill amount">₹{companyTotal.toLocaleString()}</span>
+                            {group.company.gstin && (
+                              <span className="meta-pill">GSTIN: {group.company.gstin}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="accordion-chevron">{companyExpanded ? '▲' : '▼'}</span>
                     </button>
-                  )}
+
+                    {companyExpanded && (
+                      <div className="accordion-body">
+                        {group.bills.map(bill => {
+                          const billExpanded = expandedBillIds.includes(bill.id);
+                          const visibleItems = itemSearchTerm.trim()
+                            ? bill.items.filter(item => isItemMatch(item.material.name))
+                            : bill.items;
+
+                          return (
+                            <div key={bill.id} className="bill-accordion">
+                              <div className="bill-row">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleBillAccordion(bill.id)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: 0,
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    flex: 1,
+                                    minWidth: 0
+                                  }}
+                                >
+                                  <div className="accordion-trigger-title">
+                                    Invoice {bill.invoiceNumber}
+                                  </div>
+                                  <div className="accordion-trigger-meta">
+                                    <span className="meta-pill">{new Date(bill.billDate).toLocaleDateString()}</span>
+                                    <span className="meta-pill">{getDeliveredToName(bill)}</span>
+                                    <span className="meta-pill amount">₹{getTotalAmount(bill).toLocaleString()}</span>
+                                    <span className="meta-pill">
+                                      {bill.items.length} item{bill.items.length === 1 ? '' : 's'}
+                                    </span>
+                                    <span className="meta-pill">By {bill.createdBy.name}</span>
+                                  </div>
+                                </button>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', alignItems: 'center' }}>
+                                  <button
+                                    className="btn btn-secondary"
+                                    onClick={() => handleView(bill)}
+                                    style={{ padding: '6px 10px' }}
+                                  >
+                                    View
+                                  </button>
+                                  {isAdmin && (
+                                    <button
+                                      className="btn btn-danger"
+                                      onClick={() => handleDelete(bill.id)}
+                                      style={{ padding: '6px 10px' }}
+                                    >
+                                      Delete
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => toggleBillAccordion(bill.id)}
+                                    style={{ padding: '6px 10px' }}
+                                  >
+                                    {billExpanded ? 'Hide Items' : 'Show Items'}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {billExpanded && (
+                                <div style={{ padding: '0 14px 14px' }}>
+                                  {itemSearchTerm.trim() && (
+                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
+                                      Showing matching items ({visibleItems.length} of {bill.items.length})
+                                    </div>
+                                  )}
+                                  <div className="table-wrapper" style={{ margin: '8px 0 0' }}>
+                                    <table className="table" style={{ minWidth: '720px' }}>
+                                      <thead>
+                                        <tr>
+                                          <th>Material</th>
+                                          <th>Quantity</th>
+                                          <th>Unit</th>
+                                          <th>Rate</th>
+                                          <th>Discount %</th>
+                                          <th>Net Rate</th>
+                                          <th>GST %</th>
+                                          <th>Total (Incl. GST)</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {visibleItems.map(item => (
+                                          <tr
+                                            key={item.id}
+                                            className={isItemMatch(item.material.name) ? 'item-match' : undefined}
+                                          >
+                                            <td>{item.material.name}</td>
+                                            <td>{item.quantity}</td>
+                                            <td>{item.unit}</td>
+                                            <td>₹{Number(item.rate).toLocaleString()}</td>
+                                            <td>{item.discountPercent || 0}%</td>
+                                            <td>₹{Number(item.netRate || item.rate).toLocaleString()}</td>
+                                            <td>{item.gstPercent}%</td>
+                                            <td>₹{Number(item.totalInclGst).toLocaleString()}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getMaterialMovements } from './materialMovements';
 
 // Helper function to format currency
 // Using plain number format to avoid jsPDF rendering issues with currency symbols
@@ -91,6 +92,7 @@ interface MaterialWiseData {
     rate: number;
     totalValue: number;
     deliveredTo: string;
+    deliveredToName?: string;
   }>;
   materialReports?: MaterialReport[];
 }
@@ -250,7 +252,57 @@ export const generateMaterialWiseSitesOverviewPDF = (data: MaterialWiseData) => 
       yPos += 15;
     }
 
-    // Distribution table
+    const movements = getMaterialMovements(data);
+    const unit = data.material?.unit || '';
+    if (movements.length > 0) {
+      const pageHeight = doc.internal.pageSize.getHeight();
+      if (yPos > pageHeight - 50) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFontSize(12);
+      doc.text('Movement Ledger', 14, yPos);
+      yPos += 10;
+
+      const totalInward = movements.reduce((sum, row) => sum + row.inwardQty, 0);
+      const totalOutward = movements.reduce((sum, row) => sum + row.outwardQty, 0);
+      const finalRemaining = movements[movements.length - 1].remaining;
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Date', 'Type', 'Particulars', 'Reference', 'Location', 'Inward', 'Outward', 'Remaining', 'Value']],
+        body: [
+          ...movements.map((row) => [
+            formatDate(row.date),
+            row.type === 'INWARD' ? 'Inward' : 'Outward',
+            row.type === 'INWARD' ? row.details : row.details,
+            row.reference,
+            row.location,
+            row.inwardQty ? `${row.inwardQty} ${unit}` : '-',
+            row.outwardQty ? `${row.outwardQty} ${unit}` : '-',
+            `${row.remaining} ${unit}`,
+            formatCurrency(row.value)
+          ]),
+          [
+            'Totals',
+            '',
+            '',
+            '',
+            '',
+            `${totalInward} ${unit}`,
+            `${totalOutward} ${unit}`,
+            `${finalRemaining} ${unit}`,
+            ''
+          ]
+        ],
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [52, 152, 219] }
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      yPos = (doc as any).lastAutoTable.finalY + 12;
+    }
+
     if (data.distribution && data.distribution.length > 0) {
       const pageHeight = doc.internal.pageSize.getHeight();
       if (yPos > pageHeight - 50) {
@@ -259,20 +311,17 @@ export const generateMaterialWiseSitesOverviewPDF = (data: MaterialWiseData) => 
       }
 
       doc.setFontSize(12);
-      doc.text('Distribution to Sites', 14, yPos);
+      doc.text('Issued to Sites', 14, yPos);
       yPos += 10;
-
-      const unit = data.material?.unit || '';
-      const distributionData = data.distribution.map((dist) => [
-        dist.siteName,
-        `${dist.totalQuantity} ${unit}`,
-        formatCurrency(dist.totalValue)
-      ]);
 
       autoTable(doc, {
         startY: yPos,
         head: [['Site Name', 'Total Quantity', 'Total Value']],
-        body: distributionData,
+        body: data.distribution.map((dist) => [
+          dist.siteName,
+          `${dist.totalQuantity} ${unit}`,
+          formatCurrency(dist.totalValue)
+        ]),
         styles: { fontSize: 9 },
         headStyles: { fillColor: [40, 167, 69] }
       });

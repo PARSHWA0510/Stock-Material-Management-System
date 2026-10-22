@@ -19,6 +19,7 @@ fi
 # Configuration (load from .env, no hardcoded defaults)
 S3_BUCKET="${S3_BUCKET:-}"
 S3_REGION="${S3_REGION:-us-east-1}"
+FRONTEND_DIST_ID="${FRONTEND_DIST_ID:-${CLOUDFRONT_DISTRIBUTION_ID:-}}"
 EC2_IP="${EC2_IP:-}"
 EC2_USER="${EC2_USER:-ec2-user}"
 PEM_FILE="${PEM_FILE:-}"
@@ -64,6 +65,26 @@ NC='\033[0m' # No Color
 
 deploy_frontend() {
     echo -e "${YELLOW}📦 Deploying Frontend...${NC}"
+
+    if ! aws sts get-caller-identity >/dev/null 2>&1; then
+        echo -e "${RED}❌ AWS CLI has no credentials, so the frontend cannot be uploaded to S3.${NC}"
+        echo ""
+        echo "The PEM file is only for EC2/backend SSH. Frontend deploy needs IAM access keys."
+        echo ""
+        echo "One-time setup:"
+        echo "  1. AWS Console → IAM → Users → your user → Security credentials → Create access key"
+        echo "  2. Run: aws configure"
+        echo "       AWS Access Key ID:     <from step 1>"
+        echo "       AWS Secret Access Key: <from step 1>"
+        echo "       Default region:        ${S3_REGION}"
+        echo "       Default output format: json"
+        echo "  3. Test: aws sts get-caller-identity"
+        echo "  4. Retry: ./scripts/redeploy.sh frontend"
+        echo ""
+        echo "If your org uses IAM Identity Center, use: aws login"
+        exit 1
+    fi
+
     cd "$PROJECT_DIR/frontend"
     
     echo "Installing dependencies..."

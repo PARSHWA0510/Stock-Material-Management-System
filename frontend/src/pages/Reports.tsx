@@ -564,12 +564,12 @@ const Reports: React.FC = () => {
                   const supplierOptions = [...new Set(
                     (selectedMaterialReport.additions || [])
                       .map((addition: any) => addition.company)
-                      .filter(Boolean)
+                      .filter((company: unknown): company is string => Boolean(company))
                   )].sort();
                   const siteOptions = [...new Set(
                     (selectedMaterialReport.distribution || [])
                       .map((dist: any) => dist.siteName)
-                      .filter(Boolean)
+                      .filter((siteName: unknown): siteName is string => Boolean(siteName))
                   )].sort();
 
                   const filteredRows = allMovements.filter((row) => {

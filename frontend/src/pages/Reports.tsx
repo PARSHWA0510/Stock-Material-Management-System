@@ -561,16 +561,16 @@ const Reports: React.FC = () => {
 
                 {(() => {
                   const allMovements = getMaterialMovements(selectedMaterialReport);
-                  const supplierOptions = [...new Set(
+                  const supplierOptions: string[] = Array.from(new Set<string>(
                     (selectedMaterialReport.additions || [])
-                      .map((addition: any) => addition.company)
-                      .filter((company: unknown): company is string => Boolean(company))
-                  )].sort();
-                  const siteOptions = [...new Set(
+                      .map((addition: any) => String(addition.company || ''))
+                      .filter((company: string) => company.length > 0)
+                  )).sort();
+                  const siteOptions: string[] = Array.from(new Set<string>(
                     (selectedMaterialReport.distribution || [])
-                      .map((dist: any) => dist.siteName)
-                      .filter((siteName: unknown): siteName is string => Boolean(siteName))
-                  )].sort();
+                      .map((dist: any) => String(dist.siteName || ''))
+                      .filter((siteName: string) => siteName.length > 0)
+                  )).sort();
 
                   const filteredRows = allMovements.filter((row) => {
                     if (ledgerSupplierFilter && row.type === 'INWARD' && row.details !== ledgerSupplierFilter) {
